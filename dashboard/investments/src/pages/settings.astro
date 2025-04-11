@@ -1,0 +1,1004 @@
+---
+// @ts-ignore
+
+import Layout from '../layouts/Layout.astro';
+import '../styles/global.css';
+import type { SettingsData } from '../scripts/settingsManager';
+
+// Datos de ejemplo para la página de configuración (se cargarán desde localStorage en el cliente)
+const settingsData: SettingsData = {
+  profile: {
+    name: "Juan Pérez",
+    email: "juan@example.com",
+    country: "Venezuela",
+    avatar: "/images/avatar-placeholder.png"
+  },
+  paymentMethods: {
+    bankAccounts: [
+      { id: 1, bank: "Banco Nacional", accountNumber: "****3456", primary: true },
+      { id: 2, bank: "Banco Internacional", accountNumber: "****7890", primary: false }
+    ],
+    creditCards: [
+      { id: 1, type: "Visa", number: "****1234", expiry: "12/25" }
+    ],
+    digitalWallets: [
+      { id: 1, type: "PayPal", email: "juan@example.com", connected: true },
+      { id: 2, type: "Binance", email: "juan@example.com", connected: false }
+    ]
+  },
+  security: {
+    twoFactorEnabled: true,
+    lastLogin: "2025-03-30 14:23",
+    devices: [
+      { id: 1, name: "iPhone 15", lastActive: "Hoy" },
+      { id: 2, name: "MacBook Pro", lastActive: "Ayer" }
+    ]
+  },
+  preferences: {
+    language: "es",
+    darkMode: true,
+    emailNotifications: true,
+    investmentAlerts: true
+  },
+  investmentPreferences: {
+    riskTolerance: "Moderado",
+    preferredAssets: ["Propiedades", "Oro", "Criptomonedas"],
+    autoInvest: false,
+    monthlyContribution: 500
+  }
+};
+---
+
+<Layout title="Configuración">
+  <div class="max-w-5xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Configuración de la cuenta</h1>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Navegación lateral -->
+      <div class="lg:col-span-1">
+        <div class="bg-dark-card rounded-lg shadow p-4 sticky top-20">
+          <nav class="space-y-1">
+            <a href="#profile" class="nav-link active">Perfil</a>
+            <a href="#payment" class="nav-link">Métodos de pago</a>
+            <a href="#security" class="nav-link">Seguridad</a>
+            <a href="#preferences" class="nav-link">Preferencias</a>
+            <a href="#investment" class="nav-link">Preferencias de inversión</a>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Contenido principal -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Perfil -->
+        <section id="profile" class="bg-dark-card rounded-lg shadow p-6">
+          <h2 class="text-xl font-semibold mb-4 text-primary">Perfil</h2>
+          
+          <div class="flex items-start gap-6 mb-6">
+            <img src="/images/avatar-placeholder.png" alt="Avatar" class="w-20 h-20 rounded-full bg-dark-border" />
+            <div class="flex-1">
+              <button class="btn-avatar bg-dark-card hover:bg-dark-border rounded text-sm">Cambiar avatar</button>
+              <p class="text-dark-text-secondary text-sm mt-2">JPG, PNG o GIF. Máximo 1MB.</p>
+            </div>
+          </div>
+
+          <form id="profile-form">
+            <div class="grid md:grid-cols-2 gap-4">
+              <div class="form-group">
+                <label for="name" class="form-label">Nombre completo</label>
+                <input type="text" id="name" value={settingsData.profile.name} class="form-input border-white" required />
+              </div>
+              <div class="form-group">
+                <label for="email" class="form-label">Correo electrónico</label>
+                <input type="email" id="email" value={settingsData.profile.email} class="form-input" required />
+              </div>
+              <div class="form-group">
+                <label for="country" class="form-label">País de residencia</label>
+                <select id="country" class="form-select">
+                  <option value="ve" selected={settingsData.profile.country === "Venezuela"}>Venezuela</option>
+                  <option value="us">Estados Unidos</option>
+                  <option value="co">Colombia</option>
+                  <option value="es">España</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="phone" class="form-label">Teléfono</label>
+                <input type="tel" id="phone" placeholder="+58 123 456 7890" class="form-input" />
+              </div>
+            </div>
+
+            <div class="flex justify-end mt-4">
+              <button type="submit" class="btn-save">Guardar cambios</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Métodos de pago -->
+        <section id="payment" class="bg-dark-card rounded-lg shadow p-6">
+          <h2 class="text-xl font-semibold mb-4 text-primary">Métodos de pago</h2>
+          
+          <div class="mb-6">
+            <h3 class="text-lg font-medium mb-3">Cuentas bancarias</h3>
+            <div class="space-y-3" id="bank-accounts-container">
+              {/* Los elementos se generarán dinámicamente con JavaScript */}
+            </div>
+          </div>
+
+          <div class="mb-6">
+            <h3 class="text-lg font-medium mb-3">Tarjetas de crédito</h3>
+            <div class="space-y-3" id="credit-cards-container">
+              {/* Los elementos se generarán dinámicamente con JavaScript */}
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-medium mb-3">Billeteras digitales</h3>
+            <div class="space-y-3" id="wallets-container">
+              {/* Los elementos se generarán dinámicamente con JavaScript */}
+            </div>
+          </div>
+        </section>
+
+        <!-- Seguridad -->
+        <section id="security" class="bg-dark-card rounded-lg shadow p-6">
+          <h2 class="text-xl font-semibold mb-4 text-primary">Seguridad</h2>
+          
+          <div class="mb-6">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="font-medium">Autenticación de dos factores</h3>
+                <p class="text-dark-text-secondary text-sm">Protege tu cuenta con una capa adicional de seguridad</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="two-factor-toggle" checked={settingsData.security.twoFactorEnabled} />
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="p-4 bg-dark-bg rounded mb-4">
+              <p class="text-sm">Último acceso: <span class="text-dark-text" id="last-login">{settingsData.security.lastLogin}</span></p>
+            </div>
+
+            <div class="mb-6">
+              <h3 class="font-medium mb-2">Cambiar contraseña</h3>
+              <form id="password-form" class="space-y-3">
+                <input type="password" id="current-password" placeholder="Contraseña actual" class="form-input" required />
+                <input type="password" id="new-password" placeholder="Nueva contraseña" class="form-input" required />
+                <input type="password" id="confirm-password" placeholder="Confirmar nueva contraseña" class="form-input" required />
+                <button type="submit" class="btn-save mt-3">Actualizar contraseña</button>
+              </form>
+            </div>
+
+            <div>
+              <h3 class="font-medium mb-2">Dispositivos conectados</h3>
+              <div class="space-y-2" id="devices-container">
+                {/* Los elementos se generarán dinámicamente con JavaScript */}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Preferencias -->
+        <section id="preferences" class="bg-dark-card rounded-lg shadow p-6">
+          <h2 class="text-xl font-semibold mb-4 text-primary">Preferencias</h2>
+          
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-medium">Modo oscuro</h3>
+                <p class="text-dark-text-secondary text-sm">Cambiar entre tema claro y oscuro</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="dark-mode-toggle" checked={settingsData.preferences.darkMode} />
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-medium">Idioma</h3>
+                <p class="text-dark-text-secondary text-sm">Selecciona tu idioma preferido</p>
+              </div>
+              <select id="language-select" class="form-select-sm">
+                <option value="es" selected={settingsData.preferences.language === "es"}>Español</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-medium">Notificaciones por correo</h3>
+                <p class="text-dark-text-secondary text-sm">Recibe actualizaciones sobre tu cuenta</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="email-notifications-toggle" checked={settingsData.preferences.emailNotifications} />
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-medium">Alertas de inversión</h3>
+                <p class="text-dark-text-secondary text-sm">Notificaciones sobre cambios importantes en tus inversiones</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="investment-alerts-toggle" checked={settingsData.preferences.investmentAlerts} />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- Preferencias de inversión -->
+        <section id="investment" class="bg-dark-card rounded-lg shadow p-6">
+          <h2 class="text-xl font-semibold mb-4 text-primary">Preferencias de inversión</h2>
+          
+          <div class="space-y-5">
+            <div class="form-group">
+              <label class="form-label">Tolerancia al riesgo</label>
+              <select id="risk-tolerance" class="form-select">
+                <option value="bajo">Bajo</option>
+                <option value="moderado" selected={settingsData.investmentPreferences.riskTolerance === "Moderado"}>Moderado</option>
+                <option value="alto">Alto</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Activos preferidos</label>
+              <div id="preferred-assets" class="grid grid-cols-2 gap-2 mt-2">
+                <label class="flex items-center space-x-2">
+                  <input type="checkbox" class="asset-checkbox" value="Propiedades" checked={settingsData.investmentPreferences.preferredAssets.includes("Propiedades")} />
+                  <span>Propiedades</span>
+                </label>
+                <label class="flex items-center space-x-2">
+                  <input type="checkbox" class="asset-checkbox" value="Oro" checked={settingsData.investmentPreferences.preferredAssets.includes("Oro")} />
+                  <span>Oro</span>
+                </label>
+                <label class="flex items-center space-x-2">
+                  <input type="checkbox" class="asset-checkbox" value="Criptomonedas" checked={settingsData.investmentPreferences.preferredAssets.includes("Criptomonedas")} />
+                  <span>Criptomonedas</span>
+                </label>
+                <label class="flex items-center space-x-2">
+                  <input type="checkbox" class="asset-checkbox" value="Acciones" />
+                  <span>Acciones</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-medium">Inversión automática</h3>
+                <p class="text-dark-text-secondary text-sm">Invertir automáticamente fondos disponibles</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="auto-invest-toggle" checked={settingsData.investmentPreferences.autoInvest} />
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Contribución mensual (USD)</label>
+              <input type="number" id="monthly-contribution" value={settingsData.investmentPreferences.monthlyContribution} class="form-input" />
+              <p class="text-dark-text-secondary text-sm mt-1">Cantidad que deseas invertir mensualmente</p>
+            </div>
+          </div>
+
+          <div class="flex justify-end mt-6">
+            <button class="btn-primary">Guardar preferencias</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // @ts-ignore
+    import { 
+      loadSettings, 
+      saveSettings, 
+      updateProfile, 
+      addBankAccount, 
+      removeBankAccount, 
+      addCreditCard, 
+      removeCreditCard, 
+      addDigitalWallet, 
+      removeDigitalWallet, 
+      updateSecuritySettings, 
+      removeDevice, 
+      updatePreferences, 
+      updateInvestmentPreferences, 
+      SettingsData
+    } from '../scripts/settingsManager';
+    
+    // Cargar datos desde localStorage al iniciar
+    document.addEventListener('DOMContentLoaded', () => {
+      const settings = loadSettings();
+      populateFormData(settings);
+      setupEventListeners();
+    });
+
+    // Poblar los formularios con los datos cargados
+    function populateFormData(settings: SettingsData) {
+      // Perfil
+      (document.getElementById('name') as HTMLInputElement).value = settings.profile.name;
+      (document.getElementById('email') as HTMLInputElement).value = settings.profile.email;
+      (document.getElementById('country') as HTMLSelectElement).value = settings.profile.country || '';
+      
+      // Renderizar métodos de pago
+      renderBankAccounts(settings.paymentMethods.bankAccounts);
+      renderCreditCards(settings.paymentMethods.creditCards);
+      renderDigitalWallets(settings.paymentMethods.digitalWallets);
+      
+      // Seguridad
+      const twoFactorToggle = document.getElementById('two-factor-toggle') as HTMLInputElement;
+      if (twoFactorToggle) {
+        twoFactorToggle.checked = settings.security.twoFactorEnabled;
+      }
+      document.getElementById('last-login').textContent = settings.security.lastLogin;
+      renderDevices(settings.security.devices);
+      
+      // Preferencias
+      (document.getElementById('language-select') as HTMLSelectElement).value = settings.preferences.language;
+      (document.getElementById('dark-mode-toggle') as HTMLInputElement).checked = settings.preferences.darkMode;
+      (document.getElementById('email-notifications-toggle') as HTMLInputElement).checked = settings.preferences.emailNotifications;
+      (document.getElementById('investment-alerts-toggle') as HTMLInputElement).checked = settings.preferences.investmentAlerts;
+      
+      // Preferencias de inversión
+      (document.getElementById('risk-tolerance') as HTMLSelectElement).value = settings.investmentPreferences.riskTolerance;
+      renderPreferredAssets(settings.investmentPreferences.preferredAssets);
+      (document.getElementById('auto-invest-toggle') as HTMLInputElement).checked = settings.investmentPreferences.autoInvest;
+      (document.getElementById('monthly-contribution') as HTMLInputElement).value = settings.investmentPreferences.monthlyContribution.toString();
+    }
+
+    // Configurar escuchadores de eventos
+    function setupEventListeners() {
+      // Guardar perfil
+      const profileForm = document.getElementById('profile-form');
+      if (profileForm) {
+        profileForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const profile = {
+            name: (document.getElementById('name') as HTMLInputElement).value,
+            email: (document.getElementById('email') as HTMLInputElement).value,
+            country: (document.getElementById('country') as HTMLSelectElement).value
+          };
+          updateProfile(profile);
+          showNotification('Perfil actualizado correctamente');
+        });
+      }
+
+      // Añadir cuenta bancaria
+      const addBankBtn = document.getElementById('add-bank-btn');
+      if (addBankBtn) {
+        addBankBtn.addEventListener('click', () => {
+          showModal('bank-account-modal');
+        });
+      }
+
+      // Añadir tarjeta de crédito
+      const addCardBtn = document.getElementById('add-card-btn');
+      if (addCardBtn) {
+        addCardBtn.addEventListener('click', () => {
+          showModal('credit-card-modal');
+        });
+      }
+
+      // Añadir billetera digital
+      const addWalletBtn = document.getElementById('add-wallet-btn');
+      if (addWalletBtn) {
+        addWalletBtn.addEventListener('click', () => {
+          showModal('wallet-modal');
+        });
+      }
+
+      // Cambiar contraseña
+      const passwordForm = document.getElementById('password-form');
+      if (passwordForm) {
+        passwordForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          // Aquí iría la lógica para cambiar la contraseña
+          // En un entorno real, esto se enviaría a un backend
+          showNotification('Contraseña actualizada correctamente');
+        });
+      }
+
+      // Toggles de seguridad
+      const twoFactorToggle = document.getElementById('two-factor-toggle') as HTMLInputElement;
+      if (twoFactorToggle) {
+        twoFactorToggle.addEventListener('change', () => {
+          updateSecuritySettings({ twoFactorEnabled: twoFactorToggle.checked });
+          showNotification('Configuración de seguridad actualizada');
+        });
+      }
+
+      // Toggles de preferencias
+      const darkModeToggle = document.getElementById('dark-mode-toggle') as HTMLInputElement;
+      if (darkModeToggle) {
+        darkModeToggle.addEventListener('change', () => {
+          updatePreferences({ darkMode: darkModeToggle.checked });
+          showNotification('Preferencias actualizadas');
+        });
+      }
+
+      const emailNotificationsToggle = document.getElementById('email-notifications-toggle') as HTMLInputElement;
+      if (emailNotificationsToggle) {
+        emailNotificationsToggle.addEventListener('change', () => {
+          updatePreferences({ emailNotifications: emailNotificationsToggle.checked });
+          showNotification('Preferencias actualizadas');
+        });
+      }
+
+      const investmentAlertsToggle = document.getElementById('investment-alerts-toggle') as HTMLInputElement;
+      if (investmentAlertsToggle) {
+        investmentAlertsToggle.addEventListener('change', () => {
+          updatePreferences({ investmentAlerts: investmentAlertsToggle.checked });
+          showNotification('Preferencias actualizadas');
+        });
+      }
+
+      const languageSelect = document.getElementById('language-select') as HTMLSelectElement;
+      if (languageSelect) {
+        languageSelect.addEventListener('change', () => {
+          updatePreferences({ language: languageSelect.value });
+          showNotification('Idioma actualizado');
+        });
+      }
+
+      // Preferencias de inversión
+      const riskToleranceSelect = document.getElementById('risk-tolerance') as HTMLSelectElement;
+      if (riskToleranceSelect) {
+        riskToleranceSelect.addEventListener('change', () => {
+          updateInvestmentPreferences({ riskTolerance: riskToleranceSelect.value });
+          showNotification('Preferencias de inversión actualizadas');
+        });
+      }
+
+      const autoInvestToggle = document.getElementById('auto-invest-toggle') as HTMLInputElement;
+      if (autoInvestToggle) {
+        autoInvestToggle.addEventListener('change', () => {
+          updateInvestmentPreferences({ autoInvest: autoInvestToggle.checked });
+          showNotification('Preferencias de inversión actualizadas');
+        });
+      }
+
+      const monthlyContribution = document.getElementById('monthly-contribution') as HTMLInputElement;
+      if (monthlyContribution) {
+        monthlyContribution.addEventListener('change', () => {
+          updateInvestmentPreferences({ 
+            monthlyContribution: parseFloat(monthlyContribution.value)
+          });
+          showNotification('Preferencias de inversión actualizadas');
+        });
+      }
+    }
+
+    // Funciones auxiliares para renderizar elementos dinámicos
+    function renderBankAccounts(accounts: { id: number, bank: string, accountNumber: string, primary: boolean }[]) {
+      const container = document.getElementById('bank-accounts-container');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      
+      accounts.forEach(account => {
+        const accountElement = document.createElement('div');
+        accountElement.className = 'flex items-center justify-between p-3 border border-dark-border rounded bg-dark-bg';
+        accountElement.innerHTML = `
+          <div>
+            <p class="font-medium">${account.bank}</p>
+            <p class="text-dark-text-secondary text-sm">${account.accountNumber}</p>
+            ${account.primary ? '<span class="text-green-500 text-xs">Principal</span>' : ''}
+          </div>
+          <button class="text-sm text-dark-text-secondary hover:text-primary remove-bank" data-id="${account.id}">Eliminar</button>
+        `;
+        container.appendChild(accountElement);
+      });
+      
+      // Añadir botón para agregar nueva cuenta
+      const addButton = document.createElement('button');
+      addButton.id = 'add-bank-btn';
+      addButton.className = 'btn-add w-full mt-2';
+      addButton.textContent = '+ Agregar cuenta bancaria';
+      addButton.addEventListener('click', () => showModal('bank-account-modal'));
+      container.appendChild(addButton);
+      
+      // Añadir event listeners para eliminar
+      document.querySelectorAll('.remove-bank').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = parseInt((e.currentTarget as HTMLElement).getAttribute('data-id'));
+          removeBankAccount(id);
+          renderBankAccounts(loadSettings().paymentMethods.bankAccounts);
+          showNotification('Cuenta bancaria eliminada');
+        });
+      });
+    }
+
+    function renderCreditCards(cards: { id: number, type: string, number: string, expiry: string }[]) {
+      const container = document.getElementById('credit-cards-container');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      
+      cards.forEach(card => {
+        const cardElement = document.createElement('div');
+        cardElement.className = 'flex items-center justify-between p-3 border border-dark-border rounded bg-dark-bg';
+        cardElement.innerHTML = `
+          <div>
+            <p class="font-medium">${card.type}</p>
+            <p class="text-dark-text-secondary text-sm">${card.number} • Expira: ${card.expiry}</p>
+          </div>
+          <button class="text-sm text-dark-text-secondary hover:text-primary remove-card" data-id="${card.id}">Eliminar</button>
+        `;
+        container.appendChild(cardElement);
+      });
+      
+      // Añadir botón para agregar nueva tarjeta
+      const addButton = document.createElement('button');
+      addButton.id = 'add-card-btn';
+      addButton.className = 'btn-add w-full mt-2';
+      addButton.textContent = '+ Agregar tarjeta de crédito';
+      addButton.addEventListener('click', () => showModal('credit-card-modal'));
+      container.appendChild(addButton);
+      
+      // Añadir event listeners para eliminar
+      document.querySelectorAll('.remove-card').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = parseInt((e.currentTarget as HTMLElement).getAttribute('data-id'));
+          removeCreditCard(id);
+          renderCreditCards(loadSettings().paymentMethods.creditCards);
+          showNotification('Tarjeta de crédito eliminada');
+        });
+      });
+    }
+
+    function renderDigitalWallets(wallets: { id: number, type: string, email: string, connected: boolean }[]) {
+      const container = document.getElementById('wallets-container');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      
+      wallets.forEach(wallet => {
+        const walletElement = document.createElement('div');
+        walletElement.className = 'flex items-center justify-between p-3 border border-dark-border rounded bg-dark-bg';
+        walletElement.innerHTML = `
+          <div>
+            <p class="font-medium">${wallet.type}</p>
+            <p class="text-dark-text-secondary text-sm">${wallet.email}</p>
+          </div>
+          <div>
+            ${wallet.connected ? 
+              '<span class="text-green-500 text-sm">Conectado</span>' : 
+              '<button class="btn-connect text-sm connect-wallet" data-id="' + wallet.id + '">Conectar</button>'
+            }
+          </div>
+        `;
+        container.appendChild(walletElement);
+      });
+      
+      // Añadir botón para agregar nueva billetera
+      const addButton = document.createElement('button');
+      addButton.id = 'add-wallet-btn';
+      addButton.className = 'btn-add w-full mt-2';
+      addButton.textContent = '+ Agregar billetera digital';
+      addButton.addEventListener('click', () => showModal('wallet-modal'));
+      container.appendChild(addButton);
+      
+      // Añadir event listeners para conectar
+      document.querySelectorAll('.connect-wallet').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = parseInt((e.currentTarget as HTMLElement).getAttribute('data-id'));
+          const settings = loadSettings();
+          const walletIndex = settings.paymentMethods.digitalWallets.findIndex(w => w.id === id);
+          
+          if (walletIndex !== -1) {
+            settings.paymentMethods.digitalWallets[walletIndex].connected = true;
+            saveSettings(settings);
+            renderDigitalWallets(settings.paymentMethods.digitalWallets);
+            showNotification('Billetera conectada correctamente');
+          }
+        });
+      });
+    }
+
+    function renderDevices(devices: { id: number, name: string, lastActive: string }[]) {
+      const container = document.getElementById('devices-container');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      
+      devices.forEach(device => {
+        const deviceElement = document.createElement('div');
+        deviceElement.className = 'flex items-center justify-between p-3 border border-dark-border rounded bg-dark-bg';
+        deviceElement.innerHTML = `
+          <div>
+            <p class="font-medium">${device.name}</p>
+            <p class="text-dark-text-secondary text-sm">Activo: ${device.lastActive}</p>
+          </div>
+          <button class="text-sm text-dark-text-secondary hover:text-primary remove-device" data-id="${device.id}">Desconectar</button>
+        `;
+        container.appendChild(deviceElement);
+      });
+      
+      // Añadir event listeners para desconectar
+      document.querySelectorAll('.remove-device').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = parseInt((e.currentTarget as HTMLElement).getAttribute('data-id'));
+          removeDevice(id);
+          renderDevices(loadSettings().security.devices);
+          showNotification('Dispositivo desconectado');
+        });
+      });
+    }
+
+    function renderPreferredAssets(assets: string[]) {
+      const container = document.getElementById('preferred-assets');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      
+      const assetOptions = [
+        'Propiedades', 'Acciones', 'Bonos', 'ETFs', 'Fondos mutuos', 
+        'Criptomonedas', 'Oro', 'Plata', 'Arte', 'Coleccionables'
+      ];
+      
+      assetOptions.forEach(asset => {
+        const checked = assets.includes(asset);
+        
+        const assetElement = document.createElement('div');
+        assetElement.className = 'flex items-center';
+        assetElement.innerHTML = `
+          <input type="checkbox" id="asset-${asset}" class="mr-2 asset-checkbox" 
+                 ${checked ? 'checked' : ''} value="${asset}">
+          <label for="asset-${asset}" class="text-dark-text">${asset}</label>
+        `;
+        container.appendChild(assetElement);
+      });
+      
+      // Añadir event listeners para los checkboxes
+      document.querySelectorAll('.asset-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+          const selectedAssets: string[] = [];
+          document.querySelectorAll('.asset-checkbox:checked').forEach(cb => {
+            selectedAssets.push((cb as HTMLInputElement).value);
+          });
+          
+          updateInvestmentPreferences({ preferredAssets: selectedAssets });
+          showNotification('Preferencias de inversión actualizadas');
+        });
+      });
+    }
+
+    // Funciones para modales
+    function showModal(modalId: string) {
+      // Crear modal si no existe
+      let modal = document.getElementById(modalId);
+      
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        
+        let content = '';
+        
+        if (modalId === 'bank-account-modal') {
+          content = `
+            <div class="bg-dark-card p-6 rounded-lg shadow-lg max-w-md w-full">
+              <h3 class="text-xl font-semibold mb-4">Añadir cuenta bancaria</h3>
+              <form id="bank-form">
+                <div class="form-group">
+                  <label for="bank-name" class="form-label">Nombre del banco</label>
+                  <input type="text" id="bank-name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                  <label for="account-number" class="form-label">Número de cuenta</label>
+                  <input type="text" id="account-number" class="form-input" required>
+                </div>
+                <div class="flex items-center mb-4">
+                  <input type="checkbox" id="primary-account" class="mr-2">
+                  <label for="primary-account" class="text-dark-text">Establecer como cuenta principal</label>
+                </div>
+                <div class="flex justify-end gap-2">
+                  <button type="button" class="btn-add close-modal">Cancelar</button>
+                  <button type="submit" class="btn-save">Guardar</button>
+                </div>
+              </form>
+            </div>
+          `;
+        } else if (modalId === 'credit-card-modal') {
+          content = `
+            <div class="bg-dark-card p-6 rounded-lg shadow-lg max-w-md w-full">
+              <h3 class="text-xl font-semibold mb-4">Añadir tarjeta de crédito</h3>
+              <form id="card-form">
+                <div class="form-group">
+                  <label for="card-type" class="form-label">Tipo de tarjeta</label>
+                  <select id="card-type" class="form-select" required>
+                    <option value="Visa">Visa</option>
+                    <option value="Mastercard">Mastercard</option>
+                    <option value="American Express">American Express</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="card-number" class="form-label">Número de tarjeta</label>
+                  <input type="text" id="card-number" class="form-input" placeholder="**** **** **** ****" required>
+                </div>
+                <div class="form-group">
+                  <label for="card-expiry" class="form-label">Fecha de expiración</label>
+                  <input type="text" id="card-expiry" class="form-input" placeholder="MM/YY" required>
+                </div>
+                <div class="flex justify-end gap-2">
+                  <button type="button" class="btn-add close-modal">Cancelar</button>
+                  <button type="submit" class="btn-save">Guardar</button>
+                </div>
+              </form>
+            </div>
+          `;
+        } else if (modalId === 'wallet-modal') {
+          content = `
+            <div class="bg-dark-card p-6 rounded-lg shadow-lg max-w-md w-full">
+              <h3 class="text-xl font-semibold mb-4">Añadir billetera digital</h3>
+              <form id="wallet-form">
+                <div class="form-group">
+                  <label for="wallet-type" class="form-label">Tipo de billetera</label>
+                  <select id="wallet-type" class="form-select" required>
+                    <option value="PayPal">PayPal</option>
+                    <option value="Binance">Binance</option>
+                    <option value="Coinbase">Coinbase</option>
+                    <option value="Metamask">Metamask</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="wallet-email" class="form-label">Correo electrónico</label>
+                  <input type="email" id="wallet-email" class="form-input" required>
+                </div>
+                <div class="flex justify-end gap-2">
+                  <button type="button" class="btn-add close-modal">Cancelar</button>
+                  <button type="submit" class="btn-save">Guardar</button>
+                </div>
+              </form>
+            </div>
+          `;
+        }
+        
+        modal.innerHTML = content;
+        document.body.appendChild(modal);
+        
+        // Configurar event listeners para el modal
+        modal.querySelectorAll('.close-modal').forEach(btn => {
+          btn.addEventListener('click', () => {
+            modal.remove();
+          });
+        });
+        
+        // Cerrar modal al hacer clic fuera del contenido
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            modal.remove();
+          }
+        });
+        
+        // Configurar formularios
+        if (modalId === 'bank-account-modal') {
+          const form = document.getElementById('bank-form');
+          form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newAccount = {
+              bank: (document.getElementById('bank-name') as HTMLInputElement).value,
+              accountNumber: (document.getElementById('account-number') as HTMLInputElement).value,
+              primary: (document.getElementById('primary-account') as HTMLInputElement).checked
+            };
+            
+            addBankAccount(newAccount);
+            renderBankAccounts(loadSettings().paymentMethods.bankAccounts);
+            modal.remove();
+            showNotification('Cuenta bancaria añadida correctamente');
+          });
+        } else if (modalId === 'credit-card-modal') {
+          const form = document.getElementById('card-form');
+          form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newCard = {
+              type: (document.getElementById('card-type') as HTMLSelectElement).value,
+              number: (document.getElementById('card-number') as HTMLInputElement).value,
+              expiry: (document.getElementById('card-expiry') as HTMLInputElement).value
+            };
+            
+            addCreditCard(newCard);
+            renderCreditCards(loadSettings().paymentMethods.creditCards);
+            modal.remove();
+            showNotification('Tarjeta de crédito añadida correctamente');
+          });
+        } else if (modalId === 'wallet-modal') {
+          const form = document.getElementById('wallet-form');
+          form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newWallet = {
+              type: (document.getElementById('wallet-type') as HTMLSelectElement).value,
+              email: (document.getElementById('wallet-email') as HTMLInputElement).value,
+              connected: false
+            };
+            
+            addDigitalWallet(newWallet);
+            renderDigitalWallets(loadSettings().paymentMethods.digitalWallets);
+            modal.remove();
+            showNotification('Billetera digital añadida correctamente');
+          });
+        }
+      } else {
+        modal.style.display = 'flex';
+      }
+    }
+
+    // Función para mostrar notificaciones
+    function showNotification(message: string) {
+      let notification = document.getElementById('notification');
+      
+      if (!notification) {
+        notification = document.createElement('div');
+        notification.id = 'notification';
+        notification.className = 'fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded shadow-lg transition-opacity duration-300';
+        document.body.appendChild(notification);
+      }
+      
+      notification.textContent = message;
+      notification.style.opacity = '1';
+      
+      setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => {
+          notification.remove();
+        }, 300);
+      }, 3000);
+    }
+  </script>
+</Layout>
+
+<style>
+  .nav-link {
+    display: block;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    color: var(--color-dark-text);
+    border-radius: 0.25rem;
+    transition-property: color, background-color, border-color;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+  .nav-link:hover {
+    color: var(--color-primary);
+  }
+  .nav-link.active {
+    background-color: var(--color-dark-border);
+    color: var(--color-primary);
+  }
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  .form-label {
+    display: block;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    color: var(--color-dark-text-secondary);
+    margin-bottom: 0.25rem;
+  }
+  .form-input {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    background-color: var(--color-dark-card);
+    border: 1px solid var(--color-dark-border);
+    border-radius: 0.375rem;
+    color: var(--color-dark-text);
+  }
+  .form-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary);
+  }
+  .form-select-sm {
+    padding: 0.25rem 0.75rem;
+    background-color: var(--color-dark-card);
+    border: 1px solid var(--color-dark-border);
+    border-radius: 0.375rem;
+    color: var(--color-dark-text);
+  }
+  .btn-save {
+    padding: 0.5rem 1rem;
+    background-color: var(--color-primary);
+    color: white;
+    border-radius: 0.25rem;
+    transition-property: background-color;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+  .btn-save:hover {
+    background-color: rgba(79, 70, 229, 0.9);
+  }
+  .btn-add, .btn-connect {
+    padding: 0.5rem 1rem;
+    background-color: var(--color-dark-card);
+    color: var(--color-dark-text);
+    border-radius: 0.25rem;
+    transition-property: background-color;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+  .btn-add:hover, .btn-connect:hover {
+    background-color: var(--color-dark-border);
+  }
+  .btn-avatar {
+    padding: 0.5rem 1rem;
+  }
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 3rem;
+    height: 1.5rem;
+  }
+  .switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-dark-border);
+    transition: .4s;
+    border-radius: 9999px;
+  }
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 1.25rem;
+    width: 1.25rem;
+    left: 0.125rem;
+    bottom: 0.125rem;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+  }
+  input:checked + .slider {
+    background-color: var(--color-primary);
+  }
+  input:checked + .slider:before {
+    transform: translateX(1.5rem);
+  }
+</style>
+
+<script>
+  // Navegación de pestañas
+  document.addEventListener('DOMContentLoaded', () => {
+    const navLinks = document.querySelectorAll('.nav-link');
+    
+    // Activar la pestaña al hacer clic
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        navLinks.forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+      });
+    });
+
+    // Activar pestaña según la posición de scroll
+    const sections = document.querySelectorAll('section[id]');
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = (section as HTMLElement).offsetTop - 100;
+        if (window.scrollY >= sectionTop) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href').substring(1) === current) {
+          link.classList.add('active');
+        }
+      });
+    });
+  });
+</script>

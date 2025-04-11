@@ -1,0 +1,22 @@
+---
+interface Props {
+    title: string;
+    valueId: string; // ID for the element where the value will be injected by JS
+    icon?: string; // Emoji or SVG path
+}
+
+const { title, valueId, icon } = Astro.props;
+---
+
+<div class="bg-dark-card p-6 rounded-lg shadow-lg border border-dark-border hover:shadow-xl transition-all duration-300 flex items-center space-x-4 overflow-hidden relative">
+    {icon && (
+        <div class="text-3xl bg-gradient-to-br from-primary to-accent p-3 rounded-full text-white shadow-inner">
+            {icon}
+        </div>
+    )}
+    <div class="z-10">
+        <h3 class="text-sm font-medium text-dark-text-secondary uppercase tracking-wider">{title}</h3>
+        <p class="text-2xl font-semibold text-dark-text" id={valueId}>-</p> <!-- Default value -->
+    </div>
+    <div class="absolute -right-10 -bottom-10 opacity-50 text-9xl text-accent">{icon}</div>
+</div>

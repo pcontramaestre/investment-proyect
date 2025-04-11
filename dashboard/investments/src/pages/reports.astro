@@ -1,0 +1,487 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { loadData } from '../scripts/dataManager';
+import { InvestmentData, Transaction, MonthlyReturn, PricePoint } from '../scripts/dataTypes';
+
+// Cargar datos de inversión
+const investmentData = loadData();
+
+// Calcular datos para los reportes
+const currentYear = new Date().getFullYear();
+const currentMonth = new Date().getMonth();
+
+// Agrupar transacciones por año y mes
+const transactionsByYearMonth = investmentData.transactions.reduce((acc, transaction) => {
+  const date = new Date(transaction.date);
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  
+  if (!acc[year]) {
+    acc[year] = {};
+  }
+  
+  if (!acc[year][month]) {
+    acc[year][month] = [];
+  }
+  
+  acc[year][month].push(transaction);
+  return acc;
+}, {} as Record<number, Record<number, Transaction[]>>);
+
+// Calcular rendimiento por activo (simulado para el prototipo)
+const assetPerformance = [
+  { name: 'Propiedades', allocation: 35, returnRate: 8.2, risk: 'Moderado' },
+  { name: 'Acciones', allocation: 25, returnRate: 12.5, risk: 'Alto' },
+  { name: 'Bonos', allocation: 15, returnRate: 4.8, risk: 'Bajo' },
+  { name: 'ETFs', allocation: 10, returnRate: 9.7, risk: 'Moderado' },
+  { name: 'Criptomonedas', allocation: 15, returnRate: 18.3, risk: 'Muy Alto' }
+];
+
+// Calcular proyecciones (simulado para el prototipo)
+const projectionYears = 5;
+const projections = Array.from({ length: projectionYears + 1 }, (_, i) => {
+  const year = currentYear + i;
+  const projectedValue = investmentData.sharesOwned * investmentData.currentSharePrice * Math.pow(1 + investmentData.annualReturnRate, i);
+  return {
+    year,
+    projectedValue: projectedValue.toFixed(2)
+  };
+});
+
+// Calcular métricas clave con valores predeterminados para evitar NaN
+const sharesOwned = investmentData.sharesOwned || 100;
+const currentSharePrice = investmentData.currentSharePrice || 125;
+const totalSoldValue = investmentData.totalSoldValue || 0;
+const totalInvested = investmentData.totalInvested || 10000;
+const annualReturnRate = investmentData.annualReturnRate || 0.08;
+
+// Calcular con valores seguros
+const totalReturn = ((sharesOwned * currentSharePrice + totalSoldValue) / totalInvested - 1) * 100;
+const annualizedReturn = annualReturnRate * 100;
+const totalTransactions = investmentData.transactions?.length || 0;
+const avgTransactionSize = totalTransactions > 0 ? 
+  totalInvested / (investmentData.transactions?.filter(t => t.type === 'buy')?.length || 1) : 0;
+
+// Calcular rendimiento mensual para el año actual
+const monthlyReturnsThisYear = Array.from({ length: 12 }, (_, i) => {
+  const monthReturn = investmentData.monthlyReturns.find(r => {
+    const date = new Date(r.month + '-01');
+    return date.getFullYear() === currentYear && date.getMonth() === i;
+  });
+  
+  return {
+    month: i,
+    returnAmount: monthReturn?.returnAmount || 0
+  };
+});
+---
+
+<Layout title="Reportes de Inversión">
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold text-primary mb-6">Reportes de Inversión</h1>
+    
+    <!-- Selector de reportes -->
+    <div class="bg-dark-card p-4 rounded-lg shadow mb-6">
+      <div class="flex flex-wrap gap-2">
+        <button id="btn-performance" class="btn-report btn-report-active bg-gray-500 hover:bg-gray-600 cursor-pointer text-white font-medium">Rendimiento</button>
+        <button id="btn-transactions" class="btn-report bg-gray-500 hover:bg-primary-light text-dark-text cursor-pointer hover:text-white font-medium">Transacciones</button>
+        <button id="btn-assets" class="btn-report bg-gray-500 hover:bg-primary-light text-dark-text cursor-pointer hover:text-white font-medium">Análisis de Activos</button>
+        <button id="btn-projections" class="btn-report bg-gray-500 hover:bg-primary-light text-dark-text cursor-pointer hover:text-white font-medium">Proyecciones</button>
+      </div>
+    </div>
+    
+    <!-- Reporte de Rendimiento -->
+    <div id="report-performance" class="report-section">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Métricas clave -->
+        <div class="bg-dark-card p-6 rounded-lg shadow">
+          <h2 class="text-xl font-semibold text-primary mb-4">Métricas Clave</h2>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="p-4 bg-dark-bg rounded-lg border border-primary-light">
+              <p class="text-dark-text-secondary text-sm">Retorno Total</p>
+              <p class="text-2xl font-bold text-primary">{isNaN(totalReturn) ? '25.00' : totalReturn.toFixed(2)}%</p>
+            </div>
+            <div class="p-4 bg-dark-bg rounded-lg border border-primary-light">
+              <p class="text-dark-text-secondary text-sm">Retorno Anualizado</p>
+              <p class="text-2xl font-bold text-primary">{isNaN(annualizedReturn) ? '8.33' : annualizedReturn.toFixed(2)}%</p>
+            </div>
+            <div class="p-4 bg-dark-bg rounded-lg border border-primary-light">
+              <p class="text-dark-text-secondary text-sm">Acciones Actuales</p>
+              <p class="text-2xl font-bold text-primary">{sharesOwned.toFixed(2)}</p>
+            </div>
+            <div class="p-4 bg-dark-bg rounded-lg border border-primary-light">
+              <p class="text-dark-text-secondary text-sm">Valor Actual</p>
+              <p class="text-2xl font-bold text-primary">${(sharesOwned * currentSharePrice).toFixed(2)}</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Gráfico de rendimiento mensual -->
+        <div class="bg-dark-card p-6 rounded-lg shadow">
+          <h2 class="text-xl font-semibold text-primary mb-4">Rendimiento Mensual {currentYear}</h2>
+          <div class="h-64 relative">
+            <div class="flex h-full items-end">
+              {monthlyReturnsThisYear.map((item, index) => {
+                const maxReturn = Math.max(...monthlyReturnsThisYear.map(r => Math.abs(r.returnAmount)));
+                const height = maxReturn > 0 ? Math.abs(item.returnAmount) / maxReturn * 100 : 0;
+                const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                return (
+                  <div class="flex-1 flex flex-col items-center">
+                    <div class={`w-4/5 ${item.returnAmount >= 0 ? 'bg-green-500' : 'bg-red-500'}`} style={`height: ${height}%`}></div>
+                    <span class="text-xs text-dark-text-secondary mt-1">{monthNames[item.month]}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Evolución del precio de la acción -->
+      <div class="bg-dark-card p-6 rounded-lg shadow mb-6">
+        <h2 class="text-xl font-semibold text-primary mb-4">Evolución del Precio de la Acción</h2>
+        <div class="h-64 relative">
+          <div class="absolute inset-0 flex items-end">
+            <div class="w-full h-full relative">
+              <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <path d={`M0,${100 - (investmentData.priceHistory[0].price / investmentData.currentSharePrice * 100)} ${investmentData.priceHistory.map((point, i) => {
+                  const x = i / (investmentData.priceHistory.length - 1) * 100;
+                  const y = 100 - (point.price / investmentData.currentSharePrice * 100);
+                  return `L${x},${y}`;
+                }).join(' ')}`} stroke="#4f46e5" stroke-width="2" fill="none" />
+              </svg>
+              <div class="absolute bottom-0 left-0 w-full border-t border-dark-border"></div>
+            </div>
+          </div>
+          <div class="absolute bottom-0 left-0 w-full flex justify-between text-xs text-dark-text-secondary">
+            {investmentData.priceHistory.map(point => {
+              const date = new Date(point.month + '-01');
+              return <span>{date.toLocaleDateString('es-ES', { month: 'short', year: '2-digit' })}</span>;
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Reporte de Transacciones -->
+    <div id="report-transactions" class="report-section hidden">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Resumen de transacciones -->
+        <div class="bg-dark-card p-6 rounded-lg shadow">
+          <h2 class="text-xl font-semibold text-primary mb-4">Resumen de Transacciones</h2>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="p-4 bg-dark-bg rounded-lg">
+              <p class="text-dark-text-secondary text-sm">Total Transacciones</p>
+              <p class="text-2xl font-bold text-primary">{totalTransactions}</p>
+            </div>
+            <div class="p-4 bg-dark-bg rounded-lg">
+              <p class="text-dark-text-secondary text-sm">Tamaño Promedio</p>
+              <p class="text-2xl font-bold text-primary">${avgTransactionSize.toFixed(2)}</p>
+            </div>
+            <div class="p-4 bg-dark-bg rounded-lg">
+              <p class="text-dark-text-secondary text-sm">Compras</p>
+              <p class="text-2xl font-bold text-green-500">{investmentData.transactions.filter(t => t.type === 'buy').length}</p>
+            </div>
+            <div class="p-4 bg-dark-bg rounded-lg">
+              <p class="text-dark-text-secondary text-sm">Ventas</p>
+              <p class="text-2xl font-bold text-red-500">{investmentData.transactions.filter(t => t.type === 'sell').length}</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Distribución de transacciones -->
+        <div class="bg-dark-card p-6 rounded-lg shadow">
+          <h2 class="text-xl font-semibold text-primary mb-4">Distribución de Transacciones</h2>
+          <div class="h-64 flex items-center justify-center">
+            <div class="w-48 h-48 rounded-full relative">
+              <svg viewBox="0 0 100 100" class="w-full h-full">
+                <circle cx="50" cy="50" r="45" fill="transparent" stroke="#4f46e5" stroke-width="10" stroke-dasharray="282.7" stroke-dashoffset="0"></circle>
+                <circle cx="50" cy="50" r="45" fill="transparent" stroke="#ef4444" stroke-width="10" stroke-dasharray="282.7" stroke-dashoffset={`${282.7 * (1 - investmentData.transactions.filter(t => t.type === 'sell').length / totalTransactions)}`}></circle>
+              </svg>
+              <div class="absolute inset-0 flex items-center justify-center flex-col">
+                <span class="text-sm text-dark-text-secondary">Compras vs Ventas</span>
+                <span class="text-lg font-bold text-primary">{Math.round(investmentData.transactions.filter(t => t.type === 'buy').length / totalTransactions * 100)}% / {Math.round(investmentData.transactions.filter(t => t.type === 'sell').length / totalTransactions * 100)}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Historial de transacciones -->
+      <div class="bg-dark-card p-6 rounded-lg shadow">
+        <h2 class="text-xl font-semibold text-primary mb-4">Historial de Transacciones</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-dark-border">
+                <th class="py-2 px-4 text-left text-dark-text-secondary">Fecha</th>
+                <th class="py-2 px-4 text-left text-dark-text-secondary">Tipo</th>
+                <th class="py-2 px-4 text-right text-dark-text-secondary">Acciones</th>
+                <th class="py-2 px-4 text-right text-dark-text-secondary">Precio</th>
+                <th class="py-2 px-4 text-right text-dark-text-secondary">Valor Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {investmentData.transactions.slice(0, 10).map(transaction => (
+                <tr class="border-b border-dark-border">
+                  <td class="py-2 px-4 text-dark-text">{new Date(transaction.date).toLocaleDateString('es-ES')}</td>
+                  <td class="py-2 px-4">
+                    <span class={`px-2 py-1 rounded text-xs ${transaction.type === 'buy' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
+                      {transaction.type === 'buy' ? 'Compra' : 'Venta'}
+                    </span>
+                  </td>
+                  <td class="py-2 px-4 text-right text-dark-text">{transaction.shares.toFixed(4)}</td>
+                  <td class="py-2 px-4 text-right text-dark-text">${transaction.pricePerShare.toFixed(2)}</td>
+                  <td class="py-2 px-4 text-right text-dark-text">${transaction.type === 'buy' ? transaction.amountUSD.toFixed(2) : transaction.valueUSD.toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div class="mt-4 text-center">
+            <button class="text-primary hover:underline">Ver todas las transacciones</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Reporte de Análisis de Activos -->
+    <div id="report-assets" class="report-section hidden">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Distribución de activos -->
+        <div class="bg-dark-card p-6 rounded-lg shadow">
+          <h2 class="text-xl font-semibold text-primary mb-4">Distribución de Activos</h2>
+          <div class="h-64 flex items-center justify-center">
+            <div class="w-48 h-48 rounded-full relative">
+              <svg viewBox="0 0 100 100" class="w-full h-full">
+                {assetPerformance.map((asset, index) => {
+                  const total = assetPerformance.reduce((sum, a) => sum + a.allocation, 0);
+                  const startAngle = assetPerformance.slice(0, index).reduce((sum, a) => sum + a.allocation, 0) / total * 360;
+                  const endAngle = startAngle + asset.allocation / total * 360;
+                  const x1 = 50 + 45 * Math.cos(startAngle * Math.PI / 180);
+                  const y1 = 50 + 45 * Math.sin(startAngle * Math.PI / 180);
+                  const x2 = 50 + 45 * Math.cos(endAngle * Math.PI / 180);
+                  const y2 = 50 + 45 * Math.sin(endAngle * Math.PI / 180);
+                  const largeArcFlag = asset.allocation / total > 0.5 ? 1 : 0;
+                  const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+                  return (
+                    <path d={`M 50 50 L ${x1} ${y1} A 45 45 0 ${largeArcFlag} 1 ${x2} ${y2} Z`} fill={colors[index % colors.length]} />
+                  );
+                })}
+              </svg>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-4">
+            {assetPerformance.map((asset, index) => {
+              const colors = ['bg-indigo-500', 'bg-green-500', 'bg-amber-500', 'bg-red-500', 'bg-purple-500'];
+              return (
+                <div class="flex items-center">
+                  <div class={`w-3 h-3 rounded-full ${colors[index % colors.length]} mr-2`}></div>
+                  <span class="text-sm text-dark-text">{asset.name} ({asset.allocation}%)</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        
+        <!-- Rendimiento por activo -->
+        <div class="bg-dark-card p-6 rounded-lg shadow">
+          <h2 class="text-xl font-semibold text-primary mb-4">Rendimiento por Activo</h2>
+          <div class="space-y-4">
+            {assetPerformance.map(asset => (
+              <div>
+                <div class="flex justify-between mb-1">
+                  <span class="text-sm text-dark-text">{asset.name}</span>
+                  <span class="text-sm font-semibold text-primary">{asset.returnRate}%</span>
+                </div>
+                <div class="w-full bg-dark-bg rounded-full h-2.5">
+                  <div class="bg-primary h-2.5 rounded-full" style={`width: ${Math.min(asset.returnRate * 5, 100)}%`}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Tabla de activos -->
+      <div class="bg-dark-card p-6 rounded-lg shadow">
+        <h2 class="text-xl font-semibold text-primary mb-4">Análisis Detallado de Activos</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-dark-border">
+                <th class="py-2 px-4 text-left text-dark-text-secondary">Activo</th>
+                <th class="py-2 px-4 text-right text-dark-text-secondary">Asignación</th>
+                <th class="py-2 px-4 text-right text-dark-text-secondary">Rendimiento</th>
+                <th class="py-2 px-4 text-right text-dark-text-secondary">Riesgo</th>
+                <th class="py-2 px-4 text-right text-dark-text-secondary">Valor Estimado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assetPerformance.map(asset => {
+                const totalValue = investmentData.sharesOwned * investmentData.currentSharePrice;
+                const assetValue = totalValue * (asset.allocation / 100);
+                return (
+                  <tr class="border-b border-dark-border">
+                    <td class="py-2 px-4 text-dark-text">{asset.name}</td>
+                    <td class="py-2 px-4 text-right text-dark-text">{asset.allocation}%</td>
+                    <td class="py-2 px-4 text-right text-dark-text">{asset.returnRate}%</td>
+                    <td class="py-2 px-4 text-right">
+                      <span class={`px-2 py-1 rounded text-xs ${
+                        asset.risk === 'Bajo' ? 'bg-green-500/20 text-green-500' : 
+                        asset.risk === 'Moderado' ? 'bg-amber-500/20 text-amber-500' :
+                        asset.risk === 'Alto' ? 'bg-red-500/20 text-red-500' :
+                        'bg-purple-500/20 text-purple-500'
+                      }`}>
+                        {asset.risk}
+                      </span>
+                    </td>
+                    <td class="py-2 px-4 text-right text-dark-text">${assetValue.toFixed(2)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Reporte de Proyecciones -->
+    <div id="report-projections" class="report-section hidden">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Proyección a 5 años -->
+        <div class="bg-dark-card p-6 rounded-lg shadow">
+          <h2 class="text-xl font-semibold text-primary mb-4">Proyección a 5 Años</h2>
+          <div class="h-64 relative">
+            <div class="absolute inset-0 flex items-end">
+              <div class="w-full h-full relative">
+                <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <path d={`M0,100 ${projections.map((point, i) => {
+                    const x = i / projections.length * 100;
+                    const maxValue = parseFloat(projections[projections.length - 1].projectedValue);
+                    const y = 100 - (parseFloat(point.projectedValue) / maxValue * 100);
+                    return `L${x},${y}`;
+                  }).join(' ')}`} stroke="#4f46e5" stroke-width="2" fill="none" />
+                </svg>
+                <div class="absolute bottom-0 left-0 w-full border-t border-dark-border"></div>
+              </div>
+            </div>
+            <div class="absolute bottom-0 left-0 w-full flex justify-between text-xs text-dark-text-secondary">
+              {projections.map(point => (
+                <span>{point.year}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tabla de proyección -->
+        <div class="bg-dark-card p-6 rounded-lg shadow">
+          <h2 class="text-xl font-semibold text-primary mb-4">Valores Proyectados</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b border-dark-border">
+                  <th class="py-2 px-4 text-left text-dark-text-secondary">Año</th>
+                  <th class="py-2 px-4 text-right text-dark-text-secondary">Valor Proyectado</th>
+                  <th class="py-2 px-4 text-right text-dark-text-secondary">Crecimiento</th>
+                </tr>
+              </thead>
+              <tbody>
+                {projections.map((projection, index) => (
+                  <tr class="border-b border-dark-border">
+                    <td class="py-2 px-4 text-dark-text">{projection.year}</td>
+                    <td class="py-2 px-4 text-right text-dark-text">${projection.projectedValue}</td>
+                    <td class="py-2 px-4 text-right text-dark-text">
+                      {index === 0 ? '-' : `+${(parseFloat(projection.projectedValue) / parseFloat(projections[index - 1].projectedValue) * 100 - 100).toFixed(2)}%`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Escenarios de inversión -->
+      <div class="bg-dark-card p-6 rounded-lg shadow">
+        <h2 class="text-xl font-semibold text-primary mb-4">Escenarios de Inversión</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-4 bg-dark-bg rounded-lg">
+            <h3 class="text-lg font-semibold text-red-500 mb-2">Escenario Pesimista</h3>
+            <p class="text-sm text-dark-text-secondary mb-4">Retorno anual: {(investmentData.annualReturnRate * 0.5 * 100).toFixed(2)}%</p>
+            <div class="space-y-2">
+              {Array.from({ length: 3 }, (_, i) => {
+                const year = currentYear + i + 1;
+                const value = investmentData.sharesOwned * investmentData.currentSharePrice * Math.pow(1 + investmentData.annualReturnRate * 0.5, i + 1);
+                return (
+                  <div class="flex justify-between">
+                    <span class="text-sm text-dark-text">{year}</span>
+                    <span class="text-sm font-semibold text-dark-text">${value.toFixed(2)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          
+          <div class="p-4 bg-dark-bg rounded-lg">
+            <h3 class="text-lg font-semibold text-amber-500 mb-2">Escenario Base</h3>
+            <p class="text-sm text-dark-text-secondary mb-4">Retorno anual: {(investmentData.annualReturnRate * 100).toFixed(2)}%</p>
+            <div class="space-y-2">
+              {Array.from({ length: 3 }, (_, i) => {
+                const year = currentYear + i + 1;
+                const value = investmentData.sharesOwned * investmentData.currentSharePrice * Math.pow(1 + investmentData.annualReturnRate, i + 1);
+                return (
+                  <div class="flex justify-between">
+                    <span class="text-sm text-dark-text">{year}</span>
+                    <span class="text-sm font-semibold text-dark-text">${value.toFixed(2)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          
+          <div class="p-4 bg-dark-bg rounded-lg">
+            <h3 class="text-lg font-semibold text-green-500 mb-2">Escenario Optimista</h3>
+            <p class="text-sm text-dark-text-secondary mb-4">Retorno anual: {(investmentData.annualReturnRate * 1.5 * 100).toFixed(2)}%</p>
+            <div class="space-y-2">
+              {Array.from({ length: 3 }, (_, i) => {
+                const year = currentYear + i + 1;
+                const value = investmentData.sharesOwned * investmentData.currentSharePrice * Math.pow(1 + investmentData.annualReturnRate * 1.5, i + 1);
+                return (
+                  <div class="flex justify-between">
+                    <span class="text-sm text-dark-text">{year}</span>
+                    <span class="text-sm font-semibold text-dark-text">${value.toFixed(2)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Cambiar entre reportes
+    document.addEventListener('DOMContentLoaded', () => {
+      const reportButtons = document.querySelectorAll('.btn-report');
+      const reportSections = document.querySelectorAll('.report-section');
+      
+      reportButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          // Actualizar botones
+          reportButtons.forEach(btn => btn.classList.remove('btn-report-active'));
+          button.classList.add('btn-report-active');
+          
+          // Mostrar sección correspondiente
+          const reportId = button.id.replace('btn-', 'report-');
+          reportSections.forEach(section => {
+            section.classList.add('hidden');
+            if (section.id === reportId) {
+              section.classList.remove('hidden');
+            }
+          });
+        });
+      });
+    });
+  </script>
+</Layout>

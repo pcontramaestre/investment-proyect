@@ -1,0 +1,487 @@
+---
+import Layout from '../layouts/Layout.astro';
+// Consider using a React component for the confirmation step if it gets complex
+// import ConfirmationModal from '../components/ConfirmationModal.jsx';
+---
+
+<Layout title="Buy Shares">
+    <div class="max-w-lg mx-auto bg-dark-card p-8 rounded-lg shadow">
+        <h1 class="text-2xl font-bold mb-6 text-center">Buy Shares</h1>
+
+        <div class="mb-4 text-center">
+            <span class="text-dark-text-secondary">Current Share Price:</span>
+            <span class="text-xl font-bold text-secondary ml-2" id="current-price">$0.00</span>
+        </div>
+
+        <form id="buy-form" class="space-y-6">
+            <div>
+                <label for="amountUSD" class="block text-sm font-medium text-dark-text-secondary mb-1">Amount to Invest (USD)</label>
+                <input type="number" id="amountUSD" name="amountUSD" min="10" step="0.01" required
+                       class="w-full px-4 py-2 bg-gray-700 border border-dark-border rounded-md focus:ring-primary focus:border-primary text-dark-text"
+                       placeholder="Minimum $10.00">
+                <p id="amount-error" class="text-red-500 text-sm mt-1 hidden">Investment must be at least $10.00.</p>
+            </div>
+
+            <div>
+                <p class="text-sm text-dark-text-secondary">Estimated Shares to Receive:</p>
+                <p class="text-lg font-semibold text-dark-text" id="estimated-shares">0.0000</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-dark-text-secondary mb-1">Simulated Payment Method</label>
+                <select id="paymentMethod" name="paymentMethod"
+                        class="w-full px-4 py-2 bg-gray-700 border border-dark-border rounded-md focus:ring-primary focus:border-primary text-dark-text">
+                    <option value="">Select Payment Method</option>
+                    <option value="credit-card">Credit Card</option>
+                    <option value="bank-transfer">Bank Transfer</option>
+                    <option value="online-payment">Online Payment</option>
+                </select>
+            </div>
+
+
+
+            <!-- Si se selecciona tarjeta de credito, mostrar el formulario de tarjeta -->
+            <div id="credit-card-form" class="hidden">
+                <div class="mb-4">
+                    <label for="cardNumber" class="block text-sm font-medium text-dark-text-secondary mb-1">Card Number</label>
+                    <input type="text" id="cardNumber" name="cardNumber" 
+                           class="w-full px-4 py-2 bg-gray-700 border border-dark-border rounded-md focus:ring-primary focus:border-primary text-dark-text">
+                </div>
+                <div class="mb-4">
+                    <label for="cardName" class="block text-sm font-medium text-dark-text-secondary mb-1">Cardholder Name</label>
+                    <input type="text" id="cardName" name="cardName" 
+                           class="w-full px-4 py-2 bg-gray-700 border border-dark-border rounded-md focus:ring-primary focus:border-primary text-dark-text">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label for="cardExpDate" class="block text-sm font-medium text-dark-text-secondary mb-1">Expiration Date</label>
+                        <input type="text" id="cardExpDate" name="cardExpDate" 
+                               class="w-full px-4 py-2 bg-gray-700 border border-dark-border rounded-md focus:ring-primary focus:border-primary text-dark-text">
+                    </div>
+                    <div class="mb-4">
+                        <label for="cardCvv" class="block text-sm font-medium text-dark-text-secondary mb-1">CVV</label>
+                        <input type="text" id="cardCvv" name="cardCvv" 
+                               class="w-full px-4 py-2 bg-gray-700 border border-dark-border rounded-md focus:ring-primary focus:border-primary text-dark-text">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Si se selecciona online payment, mostrar el formulario de pago, con las opciones de Binance, PayPal, Stripe, etc., Mostrar como un radio con imagenes -->
+            <div id="online-payment-form" class="hidden">
+                <div class="mb-4">
+                    <label for="paymentMethod" class="block text-sm font-medium text-dark-text-secondary mb-1">Payment Method</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex items-center">
+                            <input type="radio" id="binance" name="paymentMethod" value="binance" class="w-6 h-6">
+                            <label for="binance" class="ml-2">Binance</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" id="paypal" name="paymentMethod" value="paypal" class="w-6 h-6">
+                            <label for="paypal" class="ml-2">PayPal</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" id="stripe" name="paymentMethod" value="stripe" class="w-6 h-6">
+                            <label for="stripe" class="ml-2">Stripe</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+
+            <div>
+                <label class="block text-sm font-medium text-dark-text-secondary mb-1">Investment Type</label>
+                <select id="investmentType" name="investmentType"
+                        class="w-full px-4 py-2 bg-gray-700 border border-dark-border rounded-md focus:ring-primary focus:border-primary text-dark-text">
+                    <option value="">Select Investment Type</option>
+                    <option value="properties">Properties</option>
+                    <option value="gold">Gold</option>
+                    <option value="crypto">Cryptocurrencies</option>
+                    <option value="stocks">Stocks</option>
+                </select>
+            </div>
+
+            <!-- Opciones de propiedades -->
+            <div id="properties-options" class="hidden">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-dark-text-secondary mb-1">Select Property</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-700 p-4 rounded-md hover:bg-gray-600 cursor-pointer property-option">
+                            <img src="/images/property1.jpg" alt="Luxury Apartment" class="w-full h-32 object-cover rounded-md mb-2">
+                            <h3 class="font-semibold">Luxury Apartment</h3>
+                            <p class="text-sm text-dark-text-secondary">Miami, FL</p>
+                            <p class="text-sm font-medium text-secondary">$250 per share</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-md hover:bg-gray-600 cursor-pointer property-option">
+                            <img src="/images/property2.jpg" alt="Commercial Building" class="w-full h-32 object-cover rounded-md mb-2">
+                            <h3 class="font-semibold">Commercial Building</h3>
+                            <p class="text-sm text-dark-text-secondary">New York, NY</p>
+                            <p class="text-sm font-medium text-secondary">$500 per share</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-md hover:bg-gray-600 cursor-pointer property-option">
+                            <img src="/images/property3.jpg" alt="Vacation Home" class="w-full h-32 object-cover rounded-md mb-2">
+                            <h3 class="font-semibold">Vacation Home</h3>
+                            <p class="text-sm text-dark-text-secondary">Aspen, CO</p>
+                            <p class="text-sm font-medium text-secondary">$350 per share</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-md hover:bg-gray-600 cursor-pointer property-option">
+                            <img src="/images/property4.jpg" alt="Residential Complex" class="w-full h-32 object-cover rounded-md mb-2">
+                            <h3 class="font-semibold">Residential Complex</h3>
+                            <p class="text-sm text-dark-text-secondary">Austin, TX</p>
+                            <p class="text-sm font-medium text-secondary">$200 per share</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Opciones de oro -->
+            <div id="gold-options" class="hidden">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-dark-text-secondary mb-1">Select Gold Investment</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-700 p-4 rounded-md hover:bg-gray-600 cursor-pointer gold-option">
+                            <img src="/images/gold-bars.jpg" alt="Gold Bars" class="w-full h-32 object-cover rounded-md mb-2">
+                            <h3 class="font-semibold">Gold Bars</h3>
+                            <p class="text-sm text-dark-text-secondary">Physical Gold</p>
+                            <p class="text-sm font-medium text-secondary">$1,800 per oz</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-md hover:bg-gray-600 cursor-pointer gold-option">
+                            <img src="/images/gold-coins.jpg" alt="Gold Coins" class="w-full h-32 object-cover rounded-md mb-2">
+                            <h3 class="font-semibold">Gold Coins</h3>
+                            <p class="text-sm text-dark-text-secondary">Collector's Items</p>
+                            <p class="text-sm font-medium text-secondary">$2,000 per oz</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-md hover:bg-gray-600 cursor-pointer gold-option">
+                            <img src="/images/gold-etf.jpg" alt="Gold ETF" class="w-full h-32 object-cover rounded-md mb-2">
+                            <h3 class="font-semibold">Gold ETF</h3>
+                            <p class="text-sm text-dark-text-secondary">Market Traded</p>
+                            <p class="text-sm font-medium text-secondary">$180 per share</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Opciones de criptomonedas -->
+            <div id="crypto-options" class="hidden">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-dark-text-secondary mb-1">Select Cryptocurrency</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-700 p-4 rounded-md hover:bg-gray-600 cursor-pointer crypto-option">
+                            <img src="/images/bitcoin.jpg" alt="Bitcoin" class="w-full h-32 object-cover rounded-md mb-2">
+                            <h3 class="font-semibold">Bitcoin (BTC)</h3>
+                            <p class="text-sm text-dark-text-secondary">Market Cap: $800B</p>
+                            <p class="text-sm font-medium text-secondary">$60,000 per coin</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-md hover:bg-gray-600 cursor-pointer crypto-option">
+                            <img src="/images/ethereum.jpg" alt="Ethereum" class="w-full h-32 object-cover rounded-md mb-2">
+                            <h3 class="font-semibold">Ethereum (ETH)</h3>
+                            <p class="text-sm text-dark-text-secondary">Market Cap: $300B</p>
+                            <p class="text-sm font-medium text-secondary">$3,500 per coin</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-md hover:bg-gray-600 cursor-pointer crypto-option">
+                            <img src="/images/solana.jpg" alt="Solana" class="w-full h-32 object-cover rounded-md mb-2">
+                            <h3 class="font-semibold">Solana (SOL)</h3>
+                            <p class="text-sm text-dark-text-secondary">Market Cap: $50B</p>
+                            <p class="text-sm font-medium text-secondary">$150 per coin</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-md hover:bg-gray-600 cursor-pointer crypto-option">
+                            <img src="/images/cardano.jpg" alt="Cardano" class="w-full h-32 object-cover rounded-md mb-2">
+                            <h3 class="font-semibold">Cardano (ADA)</h3>
+                            <p class="text-sm text-dark-text-secondary">Market Cap: $30B</p>
+                            <p class="text-sm font-medium text-secondary">$1.20 per coin</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-md hover:bg-gray-600 cursor-pointer crypto-option">
+                            <img src="/images/polkadot.jpg" alt="Polkadot" class="w-full h-32 object-cover rounded-md mb-2">
+                            <h3 class="font-semibold">Polkadot (DOT)</h3>
+                            <p class="text-sm text-dark-text-secondary">Market Cap: $20B</p>
+                            <p class="text-sm font-medium text-secondary">$25 per coin</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Opciones de acciones -->
+            <div id="stocks-options" class="hidden">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-dark-text-secondary mb-1">Select Stock</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-700 p-4 rounded-md hover:bg-gray-600 cursor-pointer stock-option">
+                            <img src="/images/apple.jpg" alt="Apple" class="w-full h-32 object-cover rounded-md mb-2">
+                            <h3 class="font-semibold">Apple (AAPL)</h3>
+                            <p class="text-sm text-dark-text-secondary">Technology</p>
+                            <p class="text-sm font-medium text-secondary">$175 per share</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-md hover:bg-gray-600 cursor-pointer stock-option">
+                            <img src="/images/amazon.png" alt="Amazon" class="w-full h-32 object-cover rounded-md mb-2">
+                            <h3 class="font-semibold">Amazon (AMZN)</h3>
+                            <p class="text-sm text-dark-text-secondary">E-commerce</p>
+                            <p class="text-sm font-medium text-secondary">$3,200 per share</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-md hover:bg-gray-600 cursor-pointer stock-option">
+                            <img src="/images/tesla.png" alt="Tesla" class="w-full h-32 object-cover rounded-md mb-2">
+                            <h3 class="font-semibold">Tesla (TSLA)</h3>
+                            <p class="text-sm text-dark-text-secondary">Automotive</p>
+                            <p class="text-sm font-medium text-secondary">$800 per share</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-md hover:bg-gray-600 cursor-pointer stock-option">
+                            <img src="/images/microsoft.png" alt="Microsoft" class="w-full h-32 object-cover rounded-md mb-2">
+                            <h3 class="font-semibold">Microsoft (MSFT)</h3>
+                            <p class="text-sm text-dark-text-secondary">Technology</p>
+                            <p class="text-sm font-medium text-secondary">$290 per share</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+            <div class="pt-4">
+                <button type="submit"
+                        class="cursor-pointer w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow disabled:opacity-30 disabled:cursor-not-allowed disabled:bg-gray-200"
+                        id="buy-button">
+                    Review Purchase
+                </button>
+            </div>
+        </form>
+
+        <!-- Simple Confirmation Area (Expand or use Modal) -->
+        <div id="confirmation-area" class="mt-8 border-t border-dark-border pt-6 hidden space-y-3">
+             <h2 class="text-xl font-semibold text-center">Confirm Purchase</h2>
+             <p>Amount: <span id="confirm-amount" class="font-semibold"></span></p>
+             <p>Price per Share: <span id="confirm-price" class="font-semibold"></span></p>
+             <p>Shares to Receive: <span id="confirm-shares" class="font-semibold"></span></p>
+             <p>Payment Method: <span id="confirm-payment" class="font-semibold"></span></p>
+             <p>Investment Type: <span id="confirm-investment-type" class="font-semibold"></span></p>
+             <p>Selected Asset: <span id="confirm-asset" class="font-semibold"></span></p>
+             <div class="flex justify-center space-x-4 pt-4">
+                 <button id="confirm-buy-btn" class="bg-secondary hover:bg-secondary-light text-white font-bold py-2 px-6 rounded-lg transition-colors">Confirm</button>
+                 <button id="cancel-buy-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Cancel</button>
+             </div>
+        </div>
+         <div id="success-message" class="mt-6 text-center text-green-500 font-semibold hidden">
+             Purchase successful! Redirecting to dashboard...
+         </div>
+    </div>
+</Layout>
+
+<script>
+    import { loadData, addTransaction } from '../scripts/dataManager.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const data = loadData();
+        // Verificar si la propiedad existe y proporcionar un valor por defecto si no existe
+        const currentPrice = data && data.currentSharePrice ? data.currentSharePrice : 1.4;
+        const MIN_INVESTMENT = 10;
+
+        const form = document.getElementById('buy-form');
+        const amountInput = document.getElementById('amountUSD') as HTMLInputElement;
+        const estimatedSharesEl = document.getElementById('estimated-shares');
+        const currentPriceEl = document.getElementById('current-price');
+        const amountErrorEl = document.getElementById('amount-error');
+        const buyButton = document.getElementById('buy-button') as HTMLButtonElement;
+
+        const confirmationArea = document.getElementById('confirmation-area');
+        const confirmAmountEl = document.getElementById('confirm-amount');
+        const confirmPriceEl = document.getElementById('confirm-price');
+        const confirmSharesEl = document.getElementById('confirm-shares');
+        const confirmPaymentEl = document.getElementById('confirm-payment');
+        const confirmBuyBtn = document.getElementById('confirm-buy-btn');
+        const cancelBuyBtn = document.getElementById('cancel-buy-btn');
+        const successMessageEl = document.getElementById('success-message');
+
+        // Verificar que los elementos existen antes de manipularlos
+        if (currentPriceEl) currentPriceEl.textContent = `$${currentPrice.toFixed(2)}`;
+
+        let amountUSD = 0;
+        let sharesToReceive = 0;
+
+        if (amountInput) {
+            amountInput.addEventListener('input', () => {
+                amountUSD = parseFloat(amountInput.value) || 0;
+                if (amountUSD >= MIN_INVESTMENT) {
+                    sharesToReceive = amountUSD / currentPrice;
+                    if (estimatedSharesEl) estimatedSharesEl.textContent = sharesToReceive.toFixed(4);
+                    if (amountErrorEl) amountErrorEl.classList.add('hidden');
+                    if (buyButton) buyButton.disabled = false;
+                } else {
+                    if (estimatedSharesEl) estimatedSharesEl.textContent = '0.0000';
+                    if (amountInput.value !== "") { // Show error only if something is typed
+                       if (amountErrorEl) amountErrorEl.classList.remove('hidden');
+                    } else {
+                        if (amountErrorEl) amountErrorEl.classList.add('hidden');
+                    }
+                    if (buyButton) buyButton.disabled = true;
+                }
+            });
+        }
+
+        const creditCardForm = document.getElementById('credit-card-form');
+        const onlinePaymentForm = document.getElementById('online-payment-form');
+        const paymentMethodEl = document.getElementById('paymentMethod') as HTMLSelectElement;
+        
+        // Investment type elements
+        const investmentTypeEl = document.getElementById('investmentType') as HTMLSelectElement;
+        const propertiesOptions = document.getElementById('properties-options');
+        const goldOptions = document.getElementById('gold-options');
+        const cryptoOptions = document.getElementById('crypto-options');
+        const stocksOptions = document.getElementById('stocks-options');
+        
+        if (paymentMethodEl) {
+            paymentMethodEl.addEventListener('change', () => {
+                // Hide both forms by default
+                if (creditCardForm) creditCardForm.classList.add('hidden');
+                if (onlinePaymentForm) onlinePaymentForm.classList.add('hidden');
+                
+                // Show appropriate form based on selection
+                if (paymentMethodEl.value === 'credit-card') {
+                    if (creditCardForm) creditCardForm.classList.remove('hidden');
+                } else if (paymentMethodEl.value === 'online-payment') {
+                    if (onlinePaymentForm) onlinePaymentForm.classList.remove('hidden');
+                }
+                // Bank transfer ('bank-transfer') shows nothing
+            });
+        }
+        
+        // Manejar la selección del tipo de inversión
+        if (investmentTypeEl) {
+            investmentTypeEl.addEventListener('change', () => {
+                // Ocultar todas las opciones por defecto
+                if (propertiesOptions) propertiesOptions.classList.add('hidden');
+                if (goldOptions) goldOptions.classList.add('hidden');
+                if (cryptoOptions) cryptoOptions.classList.add('hidden');
+                if (stocksOptions) stocksOptions.classList.add('hidden');
+                
+                // Mostrar las opciones correspondientes según la selección
+                if (investmentTypeEl.value === 'properties') {
+                    if (propertiesOptions) propertiesOptions.classList.remove('hidden');
+                } else if (investmentTypeEl.value === 'gold') {
+                    if (goldOptions) goldOptions.classList.remove('hidden');
+                } else if (investmentTypeEl.value === 'crypto') {
+                    if (cryptoOptions) cryptoOptions.classList.remove('hidden');
+                } else if (investmentTypeEl.value === 'stocks') {
+                    if (stocksOptions) stocksOptions.classList.remove('hidden');
+                }
+            });
+        }
+
+        // Variables para almacenar la selección de activos
+        let selectedAssetName = '';
+        let selectedAssetPrice = 0;
+        
+        // Añadir estilos iniciales y event listeners para las opciones de activos
+        document.querySelectorAll('.property-option, .gold-option, .crypto-option, .stock-option').forEach(option => {
+            // Aplicar estilos iniciales para transiciones suaves
+            (option as HTMLElement).style.transition = 'all 0.2s ease';
+            (option as HTMLElement).style.transform = 'scale(1)';
+            
+            option.addEventListener('click', (e) => {
+                // Eliminar la clase seleccionada de todas las opciones y restaurar estilos originales
+                document.querySelectorAll('.property-option, .gold-option, .crypto-option, .stock-option').forEach(el => {
+                    el.classList.remove('ring-2', 'ring-primary', 'bg-gray-600', 'scale-105', 'shadow-lg', 'border', 'border-white');
+                    (el as HTMLElement).style.transform = 'scale(1)';
+                    // Restaurar el fondo original
+                    el.classList.add('bg-gray-700');
+                });
+                
+                // Añadir la clase seleccionada a la opción actual
+                const target = e.currentTarget as HTMLElement;
+                target.classList.add('ring-2', 'ring-primary', 'bg-gray-600', 'scale-105', 'shadow-lg' , 'border', 'border-white');
+                target.style.transition = 'all 0.2s ease';
+                
+                // Obtener el nombre y precio del activo seleccionado
+                const assetName = target.querySelector('h3')?.textContent || 'Unknown Asset';
+                const priceText = target.querySelector('.text-secondary')?.textContent || '$0';
+                selectedAssetName = assetName;
+                
+                // Extraer el precio numérico del texto (por ejemplo, "$250 per share" -> 250)
+                const priceMatch = priceText.match(/\$([\d,]+(?:\.\d+)?)/); 
+                if (priceMatch && priceMatch[1]) {
+                    selectedAssetPrice = parseFloat(priceMatch[1].replace(/,/g, ''));
+                }
+                
+                // Actualizar el precio actual y recalcular las acciones
+                if (currentPriceEl) currentPriceEl.textContent = `$${selectedAssetPrice.toFixed(2)}`;
+                if (amountUSD >= MIN_INVESTMENT) {
+                    sharesToReceive = amountUSD / selectedAssetPrice;
+                    if (estimatedSharesEl) estimatedSharesEl.textContent = sharesToReceive.toFixed(4);
+                }
+            });
+        });
+        
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (amountUSD < MIN_INVESTMENT) return;
+
+                const paymentMethodEl = document.getElementById('paymentMethod') as HTMLSelectElement;
+                const paymentMethod = paymentMethodEl ? paymentMethodEl.value : 'Credit Card';
+                
+                const investmentTypeEl = document.getElementById('investmentType') as HTMLSelectElement;
+                const investmentType = investmentTypeEl ? investmentTypeEl.options[investmentTypeEl.selectedIndex].text : 'Unknown';
+                
+                // Verificar si se ha seleccionado un activo
+                if (!selectedAssetName) {
+                    alert('Please select an asset to invest in');
+                    return;
+                }
+
+                // Show confirmation
+                if (confirmAmountEl) confirmAmountEl.textContent = `$${amountUSD.toFixed(2)}`;
+                if (confirmPriceEl) confirmPriceEl.textContent = `$${selectedAssetPrice.toFixed(2)}`;
+                if (confirmSharesEl) confirmSharesEl.textContent = sharesToReceive.toFixed(4);
+                if (confirmPaymentEl) confirmPaymentEl.textContent = paymentMethod;
+                
+                // Mostrar el tipo de inversión y el activo seleccionado
+                const confirmInvestmentTypeEl = document.getElementById('confirm-investment-type');
+                const confirmAssetEl = document.getElementById('confirm-asset');
+                
+                if (confirmInvestmentTypeEl) confirmInvestmentTypeEl.textContent = investmentType;
+                if (confirmAssetEl) confirmAssetEl.textContent = selectedAssetName;
+
+                if (form) form.classList.add('hidden'); // Hide form
+                if (confirmationArea) confirmationArea.classList.remove('hidden'); // Show confirmation
+            });
+        }
+
+        if (cancelBuyBtn) {
+            cancelBuyBtn.addEventListener('click', () => {
+                if (confirmationArea) confirmationArea.classList.add('hidden');
+                if (form) form.classList.remove('hidden');
+            });
+        }
+
+        if (confirmBuyBtn) {
+            confirmBuyBtn.addEventListener('click', () => {
+                // Añadir información del activo seleccionado a la transacción
+                const investmentTypeElement = document.getElementById('investmentType') as HTMLSelectElement;
+                const paymentMethodElement = document.getElementById('paymentMethod') as HTMLSelectElement;
+                
+                const transactionDetails = {
+                    assetName: selectedAssetName,
+                    assetType: investmentTypeElement?.value || 'unknown',
+                    paymentMethod: paymentMethodElement?.value || 'unknown'
+                };
+                
+                // Add transaction using dataManager con los detalles adicionales
+                // Usamos una aserción de tipo para evitar el error de TypeScript
+                // @ts-ignore - La función ha sido actualizada en dataManager.js para aceptar 5 parámetros
+                const success = addTransaction('buy', sharesToReceive, selectedAssetPrice, amountUSD, transactionDetails);
+
+                if (success) {
+                    if (confirmationArea) confirmationArea.classList.add('hidden');
+                    if (successMessageEl) successMessageEl.classList.remove('hidden');
+                    // Redirect back to dashboard after a short delay
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    // Handle potential error (e.g., display a message)
+                    alert("An error occurred during the purchase.");
+                    if (cancelBuyBtn) cancelBuyBtn.click(); // Go back to form
+                }
+            });
+        }
+
+        // Initial check in case the input has a default value or browser remembers it
+        if (amountInput) amountInput.dispatchEvent(new Event('input'));
+    });
+</script>

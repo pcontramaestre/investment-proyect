@@ -1,0 +1,672 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Card from '../components/Card.astro';
+// We will load data and initialize charts client-side
+---
+
+<Layout title="Investment Dashboard">
+	<div class="mb-6">
+		<h1 class="text-2xl font-bold text-primary mb-2">Dashboard Overview</h1>
+		<p class="text-dark-text-secondary">Track your investments and maximize your returns</p>
+	</div>
+
+    <div class="mb-8 p-6 bg-dark-card rounded-lg shadow-lg border border-dark-border text-center relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-primary opacity-70 rounded-full"></div>
+        <div class="absolute -left-4 -bottom-4 w-16 h-16 bg-secondary opacity-70 rounded-full"></div>
+        <div class="relative z-10">
+            <span class="text-dark-text-secondary text-lg">Current Share Price</span>
+            <div class="mt-2">
+                <span class="text-3xl font-bold text-secondary" id="current-price">$0.00</span>
+            </div>
+            <div class="mt-1 text-xs text-dark-text-secondary">Last updated: {new Date().toLocaleDateString()}</div>
+        </div>
+    </div>
+
+	<!-- Cards Section -->
+	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+		<Card title="Total Asset Value" valueId="total-value" icon="💰" />
+		<Card title="Shares Owned" valueId="shares-owned" icon="📊" />
+		<Card title="Shares Sold" valueId="shares-sold" icon="📉" />
+		<Card title="Accumulated Return" valueId="accumulated-return" icon="📈" />
+	</div>
+
+    <!-- Action Buttons -->
+    <div class="flex justify-center space-x-4 mb-10">
+         <a href="/buy" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow">
+            Buy Shares
+        </a>
+         <a href="/sell" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow">
+            Sell Shares
+        </a>
+         <button id="simulate-month-btn" class="bg-secondary hover:bg-secondary-light text-white font-bold py-3 px-6 rounded-lg transition-colors shadow">
+            Simulate Month End (Calc Return)
+        </button>
+    </div>
+
+    <!-- Portfolio Assets Section -->
+    <div class="mb-10">
+        <h2 class="text-xl font-semibold mb-6 text-primary border-b border-dark-border pb-3 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+            My Investment Portfolio
+        </h2>
+
+        <!-- Asset Categories Tabs -->
+        <div class="flex border-b border-dark-border mb-6">
+            <button class="asset-tab-btn active px-4 py-2 text-primary border-b-2 border-primary" data-category="all">All Assets</button>
+            <button class="asset-tab-btn px-4 py-2 text-dark-text-secondary hover:text-primary" data-category="properties">Properties</button>
+            <button class="asset-tab-btn px-4 py-2 text-dark-text-secondary hover:text-primary" data-category="gold">Gold</button>
+            <button class="asset-tab-btn px-4 py-2 text-dark-text-secondary hover:text-primary" data-category="crypto">Cryptocurrencies</button>
+            <button class="asset-tab-btn px-4 py-2 text-dark-text-secondary hover:text-primary" data-category="stocks">Stocks</button>
+        </div>
+
+        <!-- Assets Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Properties -->
+            <div class="asset-card bg-dark-card p-4 rounded-lg shadow border border-dark-border overflow-hidden transform transition-all hover:shadow-xl" data-type="properties">
+                <img src="/images/property1.jpg" alt="Luxury Apartment" class="w-full h-32 object-cover rounded-md mb-2">
+                <h3 class="font-semibold text-primary">Luxury Apartment</h3>
+                <p class="text-sm text-dark-text-secondary">Miami, FL</p>
+                <div class="mt-2 flex justify-between items-center">
+                    <span class="text-xs bg-green-900 text-green-300 px-2 py-1 rounded">100 shares</span>
+                    <span class="text-sm font-medium text-secondary">$250 per share</span>
+                </div>
+                <div class="mt-2 flex justify-between items-center">
+                    <span class="text-xs text-dark-text-secondary">Total Value:</span>
+                    <span class="text-sm font-medium text-white">$25,000</span>
+                </div>
+            </div>
+
+            <div class="asset-card bg-dark-card p-4 rounded-lg shadow border border-dark-border overflow-hidden transform transition-all hover:shadow-xl" data-type="properties">
+                <img src="/images/property2.jpg" alt="Commercial Building" class="w-full h-32 object-cover rounded-md mb-2">
+                <h3 class="font-semibold text-primary">Commercial Building</h3>
+                <p class="text-sm text-dark-text-secondary">New York, NY</p>
+                <div class="mt-2 flex justify-between items-center">
+                    <span class="text-xs bg-green-900 text-green-300 px-2 py-1 rounded">50 shares</span>
+                    <span class="text-sm font-medium text-secondary">$500 per share</span>
+                </div>
+                <div class="mt-2 flex justify-between items-center">
+                    <span class="text-xs text-dark-text-secondary">Total Value:</span>
+                    <span class="text-sm font-medium text-white">$25,000</span>
+                </div>
+            </div>
+
+            <!-- Gold -->
+            <div class="asset-card bg-dark-card p-4 rounded-lg shadow border border-dark-border overflow-hidden transform transition-all hover:shadow-xl" data-type="gold">
+                <img src="/images/gold-bars.jpg" alt="Gold Bars" class="w-full h-32 object-cover rounded-md mb-2">
+                <h3 class="font-semibold text-primary">Gold Bars</h3>
+                <p class="text-sm text-dark-text-secondary">Physical Gold</p>
+                <div class="mt-2 flex justify-between items-center">
+                    <span class="text-xs bg-yellow-900 text-yellow-300 px-2 py-1 rounded">15 shares</span>
+                    <span class="text-sm font-medium text-secondary">$1,800 per oz</span>
+                </div>
+                <div class="mt-2 flex justify-between items-center">
+                    <span class="text-xs text-dark-text-secondary">Total Value:</span>
+                    <span class="text-sm font-medium text-white">$27,000</span>
+                </div>
+            </div>
+
+            <!-- Cryptocurrencies -->
+            <div class="asset-card bg-dark-card p-4 rounded-lg shadow border border-dark-border overflow-hidden transform transition-all hover:shadow-xl" data-type="crypto">
+                <img src="/images/bitcoin.jpg" alt="Bitcoin" class="w-full h-32 object-cover rounded-md mb-2">
+                <h3 class="font-semibold text-primary">Bitcoin (BTC)</h3>
+                <p class="text-sm text-dark-text-secondary">Market Cap: $800B</p>
+                <div class="mt-2 flex justify-between items-center">
+                    <span class="text-xs bg-blue-900 text-blue-300 px-2 py-1 rounded">0.5 shares</span>
+                    <span class="text-sm font-medium text-secondary">$60,000 per coin</span>
+                </div>
+                <div class="mt-2 flex justify-between items-center">
+                    <span class="text-xs text-dark-text-secondary">Total Value:</span>
+                    <span class="text-sm font-medium text-white">$30,000</span>
+                </div>
+            </div>
+
+            <div class="asset-card bg-dark-card p-4 rounded-lg shadow border border-dark-border overflow-hidden transform transition-all hover:shadow-xl" data-type="crypto">
+                <img src="/images/ethereum.jpg" alt="Ethereum" class="w-full h-32 object-cover rounded-md mb-2">
+                <h3 class="font-semibold text-primary">Ethereum (ETH)</h3>
+                <p class="text-sm text-dark-text-secondary">Market Cap: $300B</p>
+                <div class="mt-2 flex justify-between items-center">
+                    <span class="text-xs bg-blue-900 text-blue-300 px-2 py-1 rounded">10 shares</span>
+                    <span class="text-sm font-medium text-secondary">$3,500 per coin</span>
+                </div>
+                <div class="mt-2 flex justify-between items-center">
+                    <span class="text-xs text-dark-text-secondary">Total Value:</span>
+                    <span class="text-sm font-medium text-white">$35,000</span>
+                </div>
+            </div>
+
+            <!-- Stocks -->
+            <div class="asset-card bg-dark-card p-4 rounded-lg shadow border border-dark-border overflow-hidden transform transition-all hover:shadow-xl" data-type="stocks">
+                <img src="/images/apple.jpg" alt="Apple" class="w-full h-32 object-cover rounded-md mb-2">
+                <h3 class="font-semibold text-primary">Apple (AAPL)</h3>
+                <p class="text-sm text-dark-text-secondary">Technology</p>
+                <div class="mt-2 flex justify-between items-center">
+                    <span class="text-xs bg-purple-900 text-purple-300 px-2 py-1 rounded">150 shares</span>
+                    <span class="text-sm font-medium text-secondary">$175 per share</span>
+                </div>
+                <div class="mt-2 flex justify-between items-center">
+                    <span class="text-xs text-dark-text-secondary">Total Value:</span>
+                    <span class="text-sm font-medium text-white">$26,250</span>
+                </div>
+            </div>
+
+            <div class="asset-card bg-dark-card p-4 rounded-lg shadow border border-dark-border overflow-hidden transform transition-all hover:shadow-xl" data-type="stocks">
+                <img src="/images/tesla.png" alt="Tesla" class="w-full h-32 object-cover rounded-md mb-2">
+                <h3 class="font-semibold text-primary">Tesla (TSLA)</h3>
+                <p class="text-sm text-dark-text-secondary">Automotive</p>
+                <div class="mt-2 flex justify-between items-center">
+                    <span class="text-xs bg-purple-900 text-purple-300 px-2 py-1 rounded">30 shares</span>
+                    <span class="text-sm font-medium text-secondary">$800 per share</span>
+                </div>
+                <div class="mt-2 flex justify-between items-center">
+                    <span class="text-xs text-dark-text-secondary">Total Value:</span>
+                    <span class="text-sm font-medium text-white">$24,000</span>
+                </div>
+            </div>
+
+            <div class="asset-card bg-dark-card p-4 rounded-lg shadow border border-dark-border overflow-hidden transform transition-all hover:shadow-xl" data-type="stocks">
+                <img src="/images/microsoft.png" alt="Microsoft" class="w-full h-32 object-cover rounded-md mb-2">
+                <h3 class="font-semibold text-primary">Microsoft (MSFT)</h3>
+                <p class="text-sm text-dark-text-secondary">Technology</p>
+                <div class="mt-2 flex justify-between items-center">
+                    <span class="text-xs bg-purple-900 text-purple-300 px-2 py-1 rounded">80 shares</span>
+                    <span class="text-sm font-medium text-secondary">$290 per share</span>
+                </div>
+                <div class="mt-2 flex justify-between items-center">
+                    <span class="text-xs text-dark-text-secondary">Total Value:</span>
+                    <span class="text-sm font-medium text-white">$23,200</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+	<!-- Charts Section -->
+	<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+		<div class="bg-dark-card p-6 rounded-lg shadow-lg border border-dark-border overflow-hidden transform transition-all hover:shadow-xl">
+			<h2 class="text-xl font-semibold mb-6 text-primary border-b border-dark-border pb-3 flex items-center">
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+				</svg>
+				Share Price History (Last 6 Months)
+			</h2>
+			<div class="relative h-64 md:h-80">
+				<canvas id="priceHistoryChart" class="absolute inset-0"></canvas>
+			</div>
+		</div>
+		<div class="bg-dark-card p-6 rounded-lg shadow-lg border border-dark-border overflow-hidden transform transition-all hover:shadow-xl">
+			<h2 class="text-xl font-semibold mb-6 text-primary border-b border-dark-border pb-3 flex items-center">
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
+				</svg>
+				Asset Distribution
+			</h2>
+			<div class="relative h-64 md:h-80">
+				<canvas id="distributionChart" class="absolute inset-0"></canvas>
+			</div>
+			<div class="mt-4 text-sm text-dark-text-secondary">
+				<p>Your shares represent <span id="ownership-percentage">0.00</span>% of total company shares (1,000,000).</p>
+			</div>
+		</div>
+        <div class="bg-dark-card p-6 rounded-lg shadow-lg border border-dark-border overflow-hidden transform transition-all hover:shadow-xl lg:col-span-2"> 
+			<h2 class="text-xl font-semibold mb-4 text-primary border-b border-dark-border pb-3 flex items-center">
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+				</svg>
+				Accumulated Returns Over Time
+			</h2>
+
+			<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+				<div class="bg-dark-bg p-3 rounded-lg border border-dark-border">
+					<div class="text-dark-text-secondary text-xs uppercase tracking-wider mb-1">Annual Return Rate</div>
+					<div class="text-xl font-bold text-accent">15.00%</div>
+					<div class="text-xs text-dark-text-secondary mt-1">Monthly: 1.25%</div>
+				</div>
+				<div class="bg-dark-bg p-3 rounded-lg border border-dark-border">
+					<div class="text-dark-text-secondary text-xs uppercase tracking-wider mb-1">Last Month Return</div>
+					<div class="text-xl font-bold text-secondary" id="last-month-return">$0.00</div>
+					<div class="text-xs text-dark-text-secondary mt-1" id="last-month-date">N/A</div>
+				</div>
+				<div class="bg-dark-bg p-3 rounded-lg border border-dark-border">
+					<div class="text-dark-text-secondary text-xs uppercase tracking-wider mb-1">Projected Annual Return</div>
+					<div class="text-xl font-bold text-primary" id="projected-annual-return">$0.00</div>
+					<div class="text-xs text-dark-text-secondary mt-1">Based on current holdings</div>
+				</div>
+			</div>
+
+			<div class="relative h-64 md:h-72">
+				<canvas id="returnsChart" class="absolute inset-0"></canvas>
+			</div>
+
+			<div class="mt-4 text-xs text-dark-text-secondary border-t border-dark-border pt-3 flex justify-between">
+				<div>Returns are calculated monthly at 1.25% of your total asset value</div>
+				<div>Click "Simulate Month End" to process returns</div>
+			</div>
+		</div>
+	</div>
+
+</Layout>
+
+<script>
+    import { loadData, calculateTotalAssetValue, processMonthlyReturn, saveData } from '../scripts/dataManager.js';
+    import { type Transaction, type BuyTransaction, type SellTransaction, type InvestmentData } from '../scripts/dataTypes';
+    import Chart from 'chart.js/auto';
+
+    // Declare the type for the window object
+    declare global {
+        interface Window {
+            processMonthlyReturn: () => void;
+        }
+    }
+
+    // Expose function for the button
+    window.processMonthlyReturn = () => {
+        processMonthlyReturn();
+        // Optionally, reload or update dashboard values after processing
+        window.location.reload(); // Simple refresh for demo
+    };
+
+    // Function to check if localStorage has data
+    const hasLocalStorageData = () => {
+        try {
+            return localStorage.getItem('investmentData') !== null;
+        } catch (e) {
+            console.error('Error checking localStorage:', e);
+            return false;
+        }
+    };
+
+    // Function to initialize dashboard with sample data
+    const initializeDashboardWithSampleData = () => {
+        // Generate sample historical data
+        const today = new Date();
+        const sampleDates = Array.from({ length: 6 }, (_, i) => {
+            const d = new Date(today);
+            d.setMonth(today.getMonth() - (5 - i));
+            d.setDate(1);
+            return d.toISOString().split('T')[0].substring(0, 7); // YYYY-MM
+        }).reverse();
+
+        // Generate sample price history
+        const priceHistory = [
+            { month: sampleDates[0], price: 1.00 },
+            { month: sampleDates[1], price: 1.05 },
+            { month: sampleDates[2], price: 1.15 },
+            { month: sampleDates[3], price: 1.25 },
+            { month: sampleDates[4], price: 1.30 },
+            { month: sampleDates[5], price: 1.40 },
+        ];
+
+        // Generate sample transactions
+        const transactions: Transaction[] = [
+            // Initial purchase 6 months ago
+            {
+                type: 'buy' as const,
+                date: new Date(today.getFullYear(), today.getMonth() - 5, 5).toISOString(),
+                shares: 50,
+                pricePerShare: 1.00,
+                amountUSD: 50
+            } as BuyTransaction,
+            // Additional purchase 5 months ago
+            {
+                type: 'buy' as const,
+                date: new Date(today.getFullYear(), today.getMonth() - 4, 10).toISOString(),
+                shares: 47.619,
+                pricePerShare: 1.05,
+                amountUSD: 50
+            } as BuyTransaction,
+            // Sell some shares 4 months ago
+            {
+                type: 'sell' as const,
+                date: new Date(today.getFullYear(), today.getMonth() - 3, 15).toISOString(),
+                shares: 20,
+                pricePerShare: 1.15,
+                valueUSD: 23
+            } as SellTransaction,
+            // Buy more 3 months ago
+            {
+                type: 'buy' as const,
+                date: new Date(today.getFullYear(), today.getMonth() - 2, 8).toISOString(),
+                shares: 80,
+                pricePerShare: 1.25,
+                amountUSD: 100
+            } as BuyTransaction,
+            // Buy more 2 months ago
+            {
+                type: 'buy' as const,
+                date: new Date(today.getFullYear(), today.getMonth() - 1, 20).toISOString(),
+                shares: 76.923,
+                pricePerShare: 1.30,
+                amountUSD: 100
+            } as BuyTransaction,
+            // Recent purchase
+            {
+                type: 'buy' as const,
+                date: new Date(today.getFullYear(), today.getMonth(), 5).toISOString(),
+                shares: 71.429,
+                pricePerShare: 1.40,
+                amountUSD: 100
+            } as BuyTransaction
+        ];
+
+        // Calculate totals
+        let sharesOwned = 0;
+        let totalInvested = 0;
+        let sharesSold = 0;
+        let totalSoldValue = 0;
+        
+        transactions.forEach(transaction => {
+            if (transaction.type === 'buy') {
+                sharesOwned += transaction.shares;
+                totalInvested += transaction.amountUSD || 0;
+            } else if (transaction.type === 'sell') {
+                sharesOwned -= transaction.shares;
+                sharesSold += transaction.shares;
+                totalSoldValue += transaction.valueUSD || 0;
+            }
+        });
+
+        // Generate monthly returns
+        const monthlyReturns = [];
+        let cumulativeShares = 0;
+        
+        // Calculate returns for each month based on the price history
+        for (let i = 0; i < priceHistory.length; i++) {
+            const month = priceHistory[i].month;
+            const price = priceHistory[i].price;
+            
+            // Estimate shares owned at the start of this month based on transactions
+            if (i === 0) {
+                cumulativeShares = 50; // First month after initial purchase
+            } else if (i === 1) {
+                cumulativeShares = 97.619; // After second purchase
+            } else if (i === 2) {
+                cumulativeShares = 77.619; // After first sale
+            } else if (i === 3) {
+                cumulativeShares = 157.619; // After third purchase
+            } else if (i === 4) {
+                cumulativeShares = 234.542; // After fourth purchase
+            } else {
+                cumulativeShares = 305.971; // After final purchase
+            }
+            
+            // Calculate monthly return (1.25% of asset value)
+            const assetValue = cumulativeShares * price;
+            const monthlyRate = 0.15 / 12; // 15% annual return rate
+            const returnAmount = assetValue * monthlyRate;
+            
+            monthlyReturns.push({
+                month,
+                returnAmount: Number(returnAmount.toFixed(2)),
+                sharesAtStartOfMonth: Number(cumulativeShares.toFixed(4))
+            });
+        }
+
+        // Calculate accumulated return
+        const accumulatedReturn = monthlyReturns.reduce((sum, item) => sum + item.returnAmount, 0);
+
+        // Create sample data object
+        const sampleData: InvestmentData = {
+            sharesOwned: Number(sharesOwned.toFixed(0)),
+            totalInvested: Number(totalInvested.toFixed(2)),
+            sharesSold: Number(sharesSold.toFixed(4)),
+            totalSoldValue: Number(totalSoldValue.toFixed(2)),
+            accumulatedReturn: Number(accumulatedReturn.toFixed(2)),
+            transactions: transactions,
+            monthlyReturns: monthlyReturns,
+            priceHistory: priceHistory,
+            currentSharePrice: 1.40,
+            annualReturnRate: 0.15,
+        };
+
+        // Save to localStorage
+        saveData(sampleData);
+        console.log('Dashboard initialized with sample data');
+        return sampleData;
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Check if localStorage has data, if not initialize with sample data
+        if (!hasLocalStorageData()) {
+            console.log('No data found in localStorage, initializing with sample data...');
+            initializeDashboardWithSampleData();
+        }
+        
+        const data = loadData();
+        
+        // Valores por defecto en caso de que las propiedades no existan
+        const currentSharePrice = data && data.currentSharePrice ? data.currentSharePrice : 1.4;
+        const sharesOwned = data && data.sharesOwned ? data.sharesOwned : 0;
+        const sharesSold = data && data.sharesSold ? data.sharesSold : 0;
+        const accumulatedReturn = data && data.accumulatedReturn ? data.accumulatedReturn : 0;
+        const priceHistory = data && data.priceHistory ? data.priceHistory : [];
+        const monthlyReturns = data && data.monthlyReturns ? data.monthlyReturns : [];
+
+        // --- Update Cards ---
+        const currentPriceEl = document.getElementById('current-price');
+        if (currentPriceEl) currentPriceEl.textContent = `$${currentSharePrice.toFixed(2)}`;
+        
+        const totalValueEl = document.getElementById('total-value');
+        if (totalValueEl) totalValueEl.textContent = `$${calculateTotalAssetValue({...data, currentSharePrice}).toFixed(2)}`;
+        
+        const sharesOwnedEl = document.getElementById('shares-owned');
+        if (sharesOwnedEl) sharesOwnedEl.textContent = sharesOwned.toFixed(0); // Show more precision for shares
+        
+        const sharesSoldEl = document.getElementById('shares-sold');
+        if (sharesSoldEl) sharesSoldEl.textContent = sharesSold.toFixed(0);
+        
+        const accumulatedReturnEl = document.getElementById('accumulated-return');
+        if (accumulatedReturnEl) accumulatedReturnEl.textContent = `$${accumulatedReturn.toFixed(2)}`;
+
+        // --- Initialize Charts ---
+        // Price History Chart
+        const priceCtx = (document.getElementById('priceHistoryChart') as HTMLCanvasElement)?.getContext('2d');
+        if (priceCtx && priceHistory.length > 0) {
+            new Chart(priceCtx, {
+                type: 'line',
+                data: {
+                    labels: priceHistory.map(item => item.month),
+                    datasets: [{
+                        label: 'Share Price ($)',
+                        data: priceHistory.map(item => item.price),
+                        borderColor: 'rgb(79, 70, 229)', // Primary color
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        tension: 0.1,
+                        fill: true,
+                    }]
+                },
+                options: {
+                     scales: {
+                        y: { beginAtZero: false, ticks: { color: '#9ca3af'}, grid: { color: '#374151'} }, // Gray-400, Gray-700
+                        x: { ticks: { color: '#9ca3af'}, grid: { color: '#374151'} }
+                    },
+                    plugins: { legend: { labels: { color: '#f3f4f6' } } } // Gray-100
+                }
+            });
+        }
+
+        // Distribution Chart - Your shares vs total market shares (1 million)
+        const distributionCtx = (document.getElementById('distributionChart') as HTMLCanvasElement)?.getContext('2d');
+        const TOTAL_MARKET_SHARES = 1000000; // 1 million total shares
+        
+        // Calculate ownership percentage
+        const ownershipPercentage = (sharesOwned / TOTAL_MARKET_SHARES) * 100;
+        const ownershipPercentageEl = document.getElementById('ownership-percentage');
+        if (ownershipPercentageEl) {
+            ownershipPercentageEl.textContent = ownershipPercentage.toFixed(4);
+        }
+        
+        if (distributionCtx) {
+            new Chart(distributionCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Your Shares', 'Remaining Market Shares'],
+                    datasets: [{
+                        label: 'Asset Distribution',
+                        data: [sharesOwned, TOTAL_MARKET_SHARES - sharesOwned],
+                        backgroundColor: [
+                            '#10b981', // Emerald-500
+                            '#4b5563'  // Gray-600
+                        ],
+                        borderColor: '#1e293b',
+                        borderWidth: 1,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { 
+                        legend: { 
+                            position: 'top', 
+                            labels: { color: '#f3f4f6' } 
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw as number;
+                                    const percentage = ((value / TOTAL_MARKET_SHARES) * 100).toFixed(4);
+                                    return `${label}: ${value.toLocaleString()} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update additional return data fields
+        const lastMonthReturnEl = document.getElementById('last-month-return');
+        const lastMonthDateEl = document.getElementById('last-month-date');
+        const projectedAnnualReturnEl = document.getElementById('projected-annual-return');
+        
+        // Calculate projected annual return based on current holdings
+        const currentAssetValue = calculateTotalAssetValue({...data, currentSharePrice});
+        const projectedAnnualReturn = currentAssetValue * data.annualReturnRate;
+        
+        if (projectedAnnualReturnEl) {
+            projectedAnnualReturnEl.textContent = `$${projectedAnnualReturn.toFixed(2)}`;
+        }
+        
+        // Get last month's return if available
+        if (monthlyReturns.length > 0 && lastMonthReturnEl && lastMonthDateEl) {
+            const lastReturn = monthlyReturns[monthlyReturns.length - 1];
+            lastMonthReturnEl.textContent = `$${lastReturn.returnAmount.toFixed(2)}`;
+            
+            // Format date from YYYY-MM to Month YYYY
+            const [year, month] = lastReturn.month.split('-');
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthIndex = parseInt(month) - 1;
+            lastMonthDateEl.textContent = `${monthNames[monthIndex]} ${year}`;
+        }
+
+        // Accumulated Returns Chart
+        const returnsCtx = (document.getElementById('returnsChart') as HTMLCanvasElement)?.getContext('2d');
+        if (returnsCtx && monthlyReturns.length > 0) {
+            // Calculate accumulated value for each month recorded
+            let cumulativeReturn = 0;
+            const accumulatedData = monthlyReturns.map(ret => {
+                cumulativeReturn += ret.returnAmount;
+                return { month: ret.month, accumulated: cumulativeReturn };
+            });
+
+            new Chart(returnsCtx, {
+                type: 'line',
+                data: {
+                    labels: accumulatedData.map(item => {
+                        // Format date from YYYY-MM to MMM YYYY
+                        const [year, month] = item.month.split('-');
+                        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        const monthIndex = parseInt(month) - 1;
+                        return `${monthNames[monthIndex]} ${year}`;
+                    }),
+                    datasets: [{
+                        label: 'Total Accumulated Return ($)',
+                        data: accumulatedData.map(item => item.accumulated.toFixed(2)),
+                        borderColor: '#f59e0b', // accent color
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        tension: 0.1,
+                        fill: true,
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { color: '#94a3b8'}, 
+                            grid: { color: '#334155'},
+                            title: {
+                                display: true,
+                                text: 'USD ($)',
+                                color: '#94a3b8'
+                            }
+                        },
+                        x: { 
+                            ticks: { color: '#94a3b8'}, 
+                            grid: { color: '#334155'}
+                        }
+                    },
+                    plugins: { 
+                        legend: { 
+                            labels: { color: '#f1f5f9' },
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Return: $${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        } else if (returnsCtx) {
+            // Display a message if no return data yet
+            returnsCtx.canvas.style.height = '200px';
+            returnsCtx.font = "16px Arial";
+            returnsCtx.fillStyle = "#94a3b8"; // dark-text-secondary
+            returnsCtx.textAlign = "center";
+            returnsCtx.fillText("No return data yet. Simulate month end to generate returns.", returnsCtx.canvas.width / 2, 100);
+        }
+
+
+        // --- Setup Button ---
+        const simulateBtn = document.getElementById('simulate-month-btn');
+        if (simulateBtn) {
+            simulateBtn.addEventListener('click', window.processMonthlyReturn);
+        }
+        
+        // --- Asset Portfolio Filtering ---
+        const assetTabBtns = document.querySelectorAll('.asset-tab-btn');
+        const assetCards = document.querySelectorAll('.asset-card');
+        
+        assetTabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all buttons
+                assetTabBtns.forEach(b => {
+                    b.classList.remove('active', 'text-primary', 'border-b-2', 'border-primary');
+                    b.classList.add('text-dark-text-secondary');
+                });
+                
+                // Add active class to clicked button
+                btn.classList.add('active', 'text-primary', 'border-b-2', 'border-primary');
+                btn.classList.remove('text-dark-text-secondary');
+                
+                const category = btn.getAttribute('data-category');
+                
+                // Show/hide cards based on category
+                assetCards.forEach(card => {
+                    if (category === 'all' || card.getAttribute('data-type') === category) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+            });
+        });
+    });
+</script>

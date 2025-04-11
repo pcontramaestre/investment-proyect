@@ -1,0 +1,189 @@
+---
+import Layout from '../layouts/Layout.astro';
+// import ConfirmationModal from '../components/ConfirmationModal.jsx'; // Optional React modal
+---
+
+<Layout title="Sell Shares">
+    <div class="max-w-lg mx-auto bg-dark-card p-8 rounded-lg shadow">
+        <h1 class="text-2xl font-bold mb-6 text-center">Sell Shares</h1>
+
+        <div class="mb-4 text-center bg-gray-700 p-3 rounded">
+            <p class="text-sm text-dark-text-secondary">Shares Currently Owned:</p>
+            <p class="text-xl font-bold text-dark-text" id="shares-owned">0.0000</p>
+        </div>
+        <div class="mb-6 text-center">
+             <span class="text-dark-text-secondary">Current Share Price:</span>
+            <span class="text-xl font-bold text-secondary ml-2" id="current-price">$0.00</span>
+        </div>
+
+
+        <form id="sell-form" class="space-y-6">
+            <div>
+                <label for="sharesToSell" class="block text-sm font-medium text-dark-text-secondary mb-1">Number of Shares to Sell</label>
+                <input type="number" id="sharesToSell" name="sharesToSell" min="0.0001" step="0.0001" required
+                       class="w-full px-4 py-2 bg-gray-700 border border-dark-border rounded-md focus:ring-primary focus:border-primary text-dark-text"
+                       placeholder="Enter amount">
+                <p id="sell-error" class="text-red-500 text-sm mt-1 hidden">Cannot sell more shares than you own.</p>
+            </div>
+
+            <div>
+                <p class="text-sm text-dark-text-secondary">Estimated Value Received (USD):</p>
+                <p class="text-lg font-semibold text-dark-text" id="estimated-value">$0.00</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-dark-text-secondary mb-1">Simulated Payout Method</label>
+                <select id="payoutMethod" name="payoutMethod"
+                        class="w-full px-4 py-2 bg-gray-700 border border-dark-border rounded-md focus:ring-primary focus:border-primary text-dark-text">
+                    <option>Bank Account</option>
+                    <option>Online Payment Platform</option>
+                </select>
+            </div>
+
+            <div class="pt-4">
+                <button type="submit"
+                        class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow disabled:opacity-50"
+                        id="sell-button" disabled>
+                    Review Sale
+                </button>
+            </div>
+        </form>
+
+         <!-- Simple Confirmation Area -->
+        <div id="confirmation-area" class="mt-8 border-t border-dark-border pt-6 hidden space-y-3">
+             <h2 class="text-xl font-semibold text-center">Confirm Sale</h2>
+             <p>Shares to Sell: <span id="confirm-shares" class="font-semibold"></span></p>
+             <p>Price per Share: <span id="confirm-price" class="font-semibold"></span></p>
+             <p>Estimated Value: <span id="confirm-value" class="font-semibold"></span></p>
+             <p>Payout Method: <span id="confirm-payout" class="font-semibold"></span></p>
+             <div class="flex justify-center space-x-4 pt-4">
+                 <button id="confirm-sell-btn" class="bg-secondary hover:bg-secondary-light text-white font-bold py-2 px-6 rounded-lg transition-colors">Confirm</button>
+                 <button id="cancel-sell-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Cancel</button>
+             </div>
+        </div>
+         <div id="success-message" class="mt-6 text-center text-green-500 font-semibold hidden">
+             Sale successful! Redirecting to dashboard...
+         </div>
+    </div>
+</Layout>
+
+<script>
+    import { loadData, addTransaction } from '../scripts/dataManager.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const data = loadData();
+        // Verificar si las propiedades existen y proporcionar valores por defecto si no existen
+        const currentPrice = data && data.currentSharePrice ? data.currentSharePrice : 1.4;
+        const sharesOwned = data && data.sharesOwned ? data.sharesOwned : 0;
+
+        const form = document.getElementById('sell-form');
+        const sharesInput = document.getElementById('sharesToSell') as HTMLInputElement;
+        const estimatedValueEl = document.getElementById('estimated-value');
+        const sharesOwnedEl = document.getElementById('shares-owned');
+        const currentPriceEl = document.getElementById('current-price');
+        const sellErrorEl = document.getElementById('sell-error');
+        const sellButton = document.getElementById('sell-button') as HTMLButtonElement;
+
+        const confirmationArea = document.getElementById('confirmation-area');
+        const confirmSharesEl = document.getElementById('confirm-shares');
+        const confirmPriceEl = document.getElementById('confirm-price');
+        const confirmValueEl = document.getElementById('confirm-value');
+        const confirmPayoutEl = document.getElementById('confirm-payout');
+        const confirmSellBtn = document.getElementById('confirm-sell-btn');
+        const cancelSellBtn = document.getElementById('cancel-sell-btn');
+        const successMessageEl = document.getElementById('success-message');
+
+        // Verificar que los elementos existen antes de manipularlos
+        if (sharesOwnedEl) sharesOwnedEl.textContent = sharesOwned.toFixed(4);
+        if (currentPriceEl) currentPriceEl.textContent = `$${currentPrice.toFixed(2)}`;
+        
+        // Set max attribute for convenience, though validation is still needed
+        if (sharesInput) sharesInput.max = sharesOwned.toString();
+
+        let sharesToSell = 0;
+        let estimatedValue = 0;
+
+        // Verificar que los elementos existen antes de agregar event listeners
+        if (sharesInput) {
+            sharesInput.addEventListener('input', () => {
+                sharesToSell = parseFloat(sharesInput.value) || 0;
+                estimatedValue = sharesToSell * currentPrice;
+
+                if (estimatedValueEl) estimatedValueEl.textContent = `$${estimatedValue.toFixed(2)}`;
+                
+                if (sharesToSell > 0 && sharesToSell <= sharesOwned) {
+                    if (sellButton) sellButton.disabled = false;
+                    if (sellErrorEl) sellErrorEl.classList.add('hidden');
+                } else {
+                    if (estimatedValueEl) estimatedValueEl.textContent = '$0.00';
+                    if (sellButton) sellButton.disabled = true;
+                    if (sharesToSell > sharesOwned) {
+                        if (sellErrorEl) sellErrorEl.classList.remove('hidden');
+                    } else {
+                        if (sellErrorEl) sellErrorEl.classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (sharesToSell <= 0 || sharesToSell > sharesOwned) return;
+
+                const payoutMethodEl = document.getElementById('payoutMethod') as HTMLSelectElement;
+                const payoutMethod = payoutMethodEl ? payoutMethodEl.value : 'Bank Account';
+
+                // Show confirmation
+                if (confirmSharesEl) confirmSharesEl.textContent = sharesToSell.toFixed(4);
+                if (confirmPriceEl) confirmPriceEl.textContent = `$${currentPrice.toFixed(2)}`;
+                if (confirmValueEl) confirmValueEl.textContent = `$${estimatedValue.toFixed(2)}`;
+                if (confirmPayoutEl) confirmPayoutEl.textContent = payoutMethod;
+
+                if (form) form.classList.add('hidden');
+                if (confirmationArea) confirmationArea.classList.remove('hidden');
+            });
+        }
+
+        if (cancelSellBtn) {
+            cancelSellBtn.addEventListener('click', () => {
+                if (confirmationArea) confirmationArea.classList.add('hidden');
+                if (form) form.classList.remove('hidden');
+            });
+        }
+
+        if (confirmSellBtn) {
+            confirmSellBtn.addEventListener('click', () => {
+                // Add transaction using dataManager
+                const success = addTransaction('sell', sharesToSell, currentPrice);
+
+                if (success) {
+                    if (confirmationArea) confirmationArea.classList.add('hidden');
+                    if (successMessageEl) successMessageEl.classList.remove('hidden');
+                    // Redirect back to dashboard
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    alert("An error occurred during the sale (e.g., insufficient shares).");
+                    if (cancelSellBtn) cancelSellBtn.click(); // Go back to form
+                }
+            });
+        }
+
+        // Initial check
+        if (sharesInput) sharesInput.dispatchEvent(new Event('input'));
+
+        // Disable form entirely if no shares are owned
+        if (sharesOwned <= 0) {
+            if (sharesInput) {
+                sharesInput.disabled = true;
+                sharesInput.placeholder = "No shares available to sell";
+            }
+            if (sellButton) sellButton.disabled = true;
+            
+            const selectEl = form?.querySelector('select') as HTMLSelectElement;
+            if (selectEl) selectEl.disabled = true; // Disable payout method too
+        }
+    });
+</script>

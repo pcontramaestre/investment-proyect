@@ -1,0 +1,218 @@
+---
+import '../styles/global.css'; // Import global styles if any (Tailwind base is injected automatically)
+import Sidebar from '../components/Sidebar.astro';
+import Header from '../components/Header.astro';
+
+interface Props {
+	title: string;
+    description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" class="dark">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content={description || "Investment Dashboard"} />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+        <!-- Include Chart.js library -->
+        <script is:inline src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	</head>
+	<body class="bg-dark-bg text-dark-text min-h-screen font-sans antialiased">
+        <div class="flex flex-col min-h-screen">
+            <!-- Sidebar Component -->
+            <Sidebar />
+            
+            <!-- Header Component -->
+            <Header />
+            
+            <!-- Main Content -->
+            <main class="pt-16 lg:pl-64 transition-all duration-300 flex-grow">
+                <div class="p-4 md:p-6 max-w-7xl mx-auto w-full">
+                    <slot />
+                    
+                    <!-- Footer -->
+                    <footer class="text-center py-6 mt-8 text-dark-text-secondary text-sm border-t border-dark-border">
+                    <div class="flex flex-col items-center justify-center space-y-4">
+                        <button id="clear-storage-btn" class="bg-gray-700 hover:bg-gray-600 text-white text-xs py-2 px-4 rounded-lg transition-colors">
+                            Reset Dashboard Data
+                        </button>
+                        <p>© {new Date().getFullYear()} Investment Dashboard. Data stored locally.</p>
+                        <p>Total Company Shares: 1,000,000</p>
+                    </div>
+
+                    <script>
+                        // Add event listener for the clear storage button
+                        document.getElementById('clear-storage-btn')?.addEventListener('click', () => {
+                            if (confirm('Are you sure you want to reset all dashboard data? This will reset your transactions and initialize with sample historical data.')) {
+                                // Generate sample historical data
+                                const today = new Date();
+                                const sampleDates = Array.from({ length: 6 }, (_, i) => {
+                                    const d = new Date(today);
+                                    d.setMonth(today.getMonth() - (5 - i));
+                                    d.setDate(1);
+                                    return d.toISOString().split('T')[0].substring(0, 7); // YYYY-MM
+                                }).reverse();
+
+                                // Generate sample price history
+                                const priceHistory = [
+                                    { month: sampleDates[0], price: 1.00 },
+                                    { month: sampleDates[1], price: 1.05 },
+                                    { month: sampleDates[2], price: 1.15 },
+                                    { month: sampleDates[3], price: 1.25 },
+                                    { month: sampleDates[4], price: 1.30 },
+                                    { month: sampleDates[5], price: 1.40 },
+                                ];
+
+                                // Generate sample transactions
+                                const transactions = [
+                                    // Initial purchase 6 months ago
+                                    {
+                                        type: 'buy',
+                                        date: new Date(today.getFullYear(), today.getMonth() - 5, 5).toISOString(),
+                                        shares: 50,
+                                        pricePerShare: 1.00,
+                                        amountUSD: 50
+                                    },
+                                    // Additional purchase 5 months ago
+                                    {
+                                        type: 'buy',
+                                        date: new Date(today.getFullYear(), today.getMonth() - 4, 10).toISOString(),
+                                        shares: 47.619,
+                                        pricePerShare: 1.05,
+                                        amountUSD: 50
+                                    },
+                                    // Sell some shares 4 months ago
+                                    {
+                                        type: 'sell',
+                                        date: new Date(today.getFullYear(), today.getMonth() - 3, 15).toISOString(),
+                                        shares: 20,
+                                        pricePerShare: 1.15,
+                                        valueUSD: 23
+                                    },
+                                    // Buy more 3 months ago
+                                    {
+                                        type: 'buy',
+                                        date: new Date(today.getFullYear(), today.getMonth() - 2, 8).toISOString(),
+                                        shares: 80,
+                                        pricePerShare: 1.25,
+                                        amountUSD: 100
+                                    },
+                                    // Buy more 2 months ago
+                                    {
+                                        type: 'buy',
+                                        date: new Date(today.getFullYear(), today.getMonth() - 1, 20).toISOString(),
+                                        shares: 76.923,
+                                        pricePerShare: 1.30,
+                                        amountUSD: 100
+                                    },
+                                    // Recent purchase
+                                    {
+                                        type: 'buy',
+                                        date: new Date(today.getFullYear(), today.getMonth(), 5).toISOString(),
+                                        shares: 71.429,
+                                        pricePerShare: 1.40,
+                                        amountUSD: 100
+                                    }
+                                ];
+
+                                // Calculate totals
+                                let sharesOwned = 0;
+                                let totalInvested = 0;
+                                let sharesSold = 0;
+                                let totalSoldValue = 0;
+                                
+                                transactions.forEach(transaction => {
+                                    if (transaction.type === 'buy') {
+                                        sharesOwned += transaction.shares;
+                                        totalInvested += transaction.amountUSD || 0;
+                                    } else if (transaction.type === 'sell') {
+                                        sharesOwned -= transaction.shares;
+                                        sharesSold += transaction.shares;
+                                        totalSoldValue += transaction.valueUSD || 0;
+                                    }
+                                });
+
+                                // Generate monthly returns
+                                const monthlyReturns = [];
+                                let cumulativeShares = 0;
+                                
+                                // Calculate returns for each month based on the price history
+                                for (let i = 0; i < priceHistory.length; i++) {
+                                    const month = priceHistory[i].month;
+                                    const price = priceHistory[i].price;
+                                    
+                                    // Estimate shares owned at the start of this month based on transactions
+                                    if (i === 0) {
+                                        cumulativeShares = 50; // First month after initial purchase
+                                    } else if (i === 1) {
+                                        cumulativeShares = 97.619; // After second purchase
+                                    } else if (i === 2) {
+                                        cumulativeShares = 77.619; // After first sale
+                                    } else if (i === 3) {
+                                        cumulativeShares = 157.619; // After third purchase
+                                    } else if (i === 4) {
+                                        cumulativeShares = 234.542; // After fourth purchase
+                                    } else {
+                                        cumulativeShares = 305.971; // After final purchase
+                                    }
+                                    
+                                    // Calculate monthly return (1.25% of asset value)
+                                    const assetValue = cumulativeShares * price;
+                                    const monthlyRate = 0.15 / 12; // 15% annual return rate
+                                    const returnAmount = assetValue * monthlyRate;
+                                    
+                                    monthlyReturns.push({
+                                        month,
+                                        returnAmount: Number(returnAmount.toFixed(2)),
+                                        sharesAtStartOfMonth: Number(cumulativeShares.toFixed(4))
+                                    });
+                                }
+
+                                // Calculate accumulated return
+                                const accumulatedReturn = monthlyReturns.reduce((sum, item) => sum + item.returnAmount, 0);
+
+                                // Create sample data object
+                                const sampleData = {
+                                    sharesOwned: Number(sharesOwned.toFixed(4)),
+                                    totalInvested: Number(totalInvested.toFixed(2)),
+                                    sharesSold: Number(sharesSold.toFixed(4)),
+                                    totalSoldValue: Number(totalSoldValue.toFixed(2)),
+                                    accumulatedReturn: Number(accumulatedReturn.toFixed(2)),
+                                    transactions: transactions,
+                                    monthlyReturns: monthlyReturns,
+                                    priceHistory: priceHistory,
+                                    currentSharePrice: 1.40,
+                                    annualReturnRate: 0.15,
+                                };
+
+                                // Save to localStorage
+                                localStorage.setItem('investmentData', JSON.stringify(sampleData));
+                                
+                                // Clear user settings data
+                                localStorage.removeItem('userSettings');
+                                
+                                alert('Dashboard data has been reset with sample historical data. The page will now reload.');
+                                window.location.reload();
+                            }
+                        });
+                    </script>
+                </footer>
+            </div>
+        </main>
+	</body>
+</html>
+
+<style is:global>
+    /* Optional: Add any global styles here if needed */
+	/* Example: Ensure chart canvas has a defined size */
+	canvas {
+		max-width: 100%;
+		height: auto;
+	}
+</style>

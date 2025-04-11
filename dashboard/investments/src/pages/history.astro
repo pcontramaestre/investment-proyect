@@ -1,0 +1,114 @@
+---
+import Layout from '../layouts/Layout.astro';
+// Transaction data loaded client-side
+---
+
+<Layout title="Transaction History">
+    <h1 class="text-3xl font-bold mb-6 text-center">Transaction History</h1>
+
+    <div class="bg-dark-card p-6 rounded-lg shadow overflow-x-auto">
+        <table class="w-full min-w-[600px] text-left">
+            <thead class="border-b border-dark-border">
+                <tr>
+                    <th class="py-3 px-4 text-sm font-semibold uppercase text-dark-text-secondary">Date</th>
+                    <th class="py-3 px-4 text-sm font-semibold uppercase text-dark-text-secondary">Type</th>
+                    <th class="py-3 px-4 text-sm font-semibold uppercase text-dark-text-secondary">Shares</th>
+                    <th class="py-3 px-4 text-sm font-semibold uppercase text-dark-text-secondary">Price/Share</th>
+                    <th class="py-3 px-4 text-sm font-semibold uppercase text-dark-text-secondary">Amount/Value (USD)</th>
+                </tr>
+            </thead>
+            <tbody id="history-table-body">
+                <!-- Rows will be injected by JavaScript -->
+                <tr>
+                    <td colspan="5" class="text-center py-10 text-dark-text-secondary" id="loading-message">Loading history...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+     <div class="bg-dark-card p-6 rounded-lg shadow overflow-x-auto mt-8">
+        <h2 class="text-xl font-semibold mb-4 text-dark-text-secondary">Monthly Return History</h2>
+         <table class="w-full min-w-[400px] text-left">
+            <thead class="border-b border-dark-border">
+                <tr>
+                    <th class="py-3 px-4 text-sm font-semibold uppercase text-dark-text-secondary">Month (YYYY-MM)</th>
+                    <th class="py-3 px-4 text-sm font-semibold uppercase text-dark-text-secondary">Return Amount (USD)</th>
+                    <th class="py-3 px-4 text-sm font-semibold uppercase text-dark-text-secondary">Shares Owned (Approx)</th>
+                 </tr>
+            </thead>
+             <tbody id="returns-history-body">
+                <tr>
+                    <td colspan="3" class="text-center py-10 text-dark-text-secondary" id="loading-returns-message">Loading return history...</td>
+                </tr>
+             </tbody>
+         </table>
+    </div>
+</Layout>
+
+<script>
+    import { loadData } from '../scripts/dataManager.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const data = loadData();
+        
+        // Valores por defecto en caso de que las propiedades no existan
+        const transactions = data && data.transactions ? data.transactions : [];
+        const monthlyReturns = data && data.monthlyReturns ? data.monthlyReturns : [];
+        
+        const historyBody = document.getElementById('history-table-body') as HTMLTableSectionElement;
+        const returnsBody = document.getElementById('returns-history-body') as HTMLTableSectionElement;
+        const loadingMsg = document.getElementById('loading-message');
+        const loadingReturnsMsg = document.getElementById('loading-returns-message');
+
+        // Clear loading message
+        if (historyBody) historyBody.innerHTML = '';
+        if (returnsBody) returnsBody.innerHTML = '';
+
+        // Populate Transaction History
+        if (transactions.length > 0 && historyBody) {
+            // Sort by date, newest first
+            const sortedTransactions = [...transactions].sort((a, b) => 
+                new Date(b.date).getTime() - new Date(a.date).getTime()
+            );
+
+            sortedTransactions.forEach(tx => {
+                const row = historyBody.insertRow();
+                row.classList.add('border-b', 'border-dark-border', 'hover:bg-gray-700');
+
+                const date = new Date(tx.date);
+                const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+                const typeText = tx.type.charAt(0).toUpperCase() + tx.type.slice(1);
+                const typeColor = tx.type === 'buy' ? 'text-green-400' : 'text-red-400';
+                const amountValue = tx.type === 'buy' ? `$${tx.amountUSD?.toFixed(2)}` : `$${tx.valueUSD?.toFixed(2)}`;
+
+                row.innerHTML = `
+                    <td class="py-3 px-4 text-sm text-dark-text">${formattedDate}</td>
+                    <td class="py-3 px-4 text-sm font-medium ${typeColor}">${typeText}</td>
+                    <td class="py-3 px-4 text-sm text-dark-text">${tx.shares.toFixed(4)}</td>
+                    <td class="py-3 px-4 text-sm text-dark-text">$${tx.pricePerShare.toFixed(2)}</td>
+                    <td class="py-3 px-4 text-sm text-dark-text">${amountValue}</td>
+                `;
+            });
+        } else if (historyBody) {
+            historyBody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-dark-text-secondary">No transactions recorded yet.</td></tr>';
+        }
+
+         // Populate Monthly Returns History
+         if (monthlyReturns.length > 0 && returnsBody) {
+             // Sort by month, newest first
+             const sortedReturns = [...monthlyReturns].sort((a, b) => b.month.localeCompare(a.month));
+
+             sortedReturns.forEach(ret => {
+                 const row = returnsBody.insertRow();
+                 row.classList.add('border-b', 'border-dark-border', 'hover:bg-gray-700');
+
+                 row.innerHTML = `
+                    <td class="py-3 px-4 text-sm text-dark-text">${ret.month}</td>
+                    <td class="py-3 px-4 text-sm text-green-400">+$${ret.returnAmount.toFixed(2)}</td>
+                    <td class="py-3 px-4 text-sm text-dark-text">${ret.sharesAtStartOfMonth?.toFixed(4) || 'N/A'}</td>
+                 `;
+            });
+        } else if (returnsBody) {
+            returnsBody.innerHTML = '<tr><td colspan="3" class="text-center py-10 text-dark-text-secondary">No monthly returns recorded yet. Use "Simulate Month End" on the dashboard.</td></tr>';
+        }
+    });
+</script>
